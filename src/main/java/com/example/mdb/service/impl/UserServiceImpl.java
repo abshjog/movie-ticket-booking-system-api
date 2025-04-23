@@ -20,12 +20,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails registerUser(UserRegistrationRequest registrationRequest) {
-        // Check if the email is already registered
+        // 1. Check if the email is already registered.
         if (userRepository.existsByEmail(registrationRequest.email())) {
             throw new EmailAlreadyExistsException("Email " + registrationRequest.email() + " already exists");
         }
 
-        // Convert user role string to an enum safely
+        // 2. Convert the user role string to an enum safely.
         UserRole role;
         try {
             role = UserRole.valueOf(registrationRequest.userRole().toUpperCase());
@@ -33,18 +33,18 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid user role: " + registrationRequest.userRole());
         }
 
-        // Create the correct entity type based on role
+        // 3. Create the correct entity type based on role.
         UserDetails newUser = role == UserRole.THEATER_OWNER ? new TheaterOwner() : new User();
 
-        // Set basic user properties
+        // 4. Map the DTO properties into the new entity.
         newUser.setUserRole(role);
         newUser.setEmail(registrationRequest.email());
         newUser.setUsername(registrationRequest.username());
-        newUser.setPassword(registrationRequest.password()); // Consider hashing the password
+        newUser.setPassword(registrationRequest.password()); // Consider hashing the password for production.
         newUser.setPhoneNumber(registrationRequest.phoneNumber());
         newUser.setDateOfBirth(registrationRequest.dateOfBirth());
 
-        // Save and return the newly registered user
+        // 5. Save and return the newly registered user.
         return userRepository.save(newUser);
     }
 }
