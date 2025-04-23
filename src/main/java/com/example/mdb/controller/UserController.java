@@ -31,8 +31,12 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<ResponseStructure<String>> softDeleteUser(@RequestParam("userId") String userId) {
-        userService.softDeleteUser(userId);
-        return restResponseBuilder.success(HttpStatus.OK, "User soft deleted successfully", "User with id " + userId + " is now deactivated");
+    public ResponseEntity<ResponseStructure<String>> deleteUser(@RequestParam("email") String email) {
+        userService.softDeleteUserByEmail(email);
+        return restResponseBuilder.success(
+                HttpStatus.OK,
+                "User account soft deleted successfully",
+                "User with email " + email + " has now been deleted"
+        );
     }
 }
