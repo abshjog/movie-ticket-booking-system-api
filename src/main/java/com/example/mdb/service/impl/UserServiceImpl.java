@@ -68,10 +68,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void softDeleteUser(String userId) {
-        UserDetails user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        user.setDeleted(true);  // Use setDeleted() instead of setIsDeleted()
+    public void softDeleteUserByEmail(String email) {
+        UserDetails user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        // Use the generated setter from Lombok (setDeleted)
+        user.setDeleted(true);
         user.setDeletedAt(Instant.now());
         userRepository.save(user);
     }

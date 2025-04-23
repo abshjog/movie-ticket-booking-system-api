@@ -12,5 +12,5 @@ public interface UserService {
 
     UserDetails updateUser(String email, @Valid UserRequest userRequest);
 
-    void softDeleteUser(String userId);
+    void softDeleteUserByEmail(String email);
 }
