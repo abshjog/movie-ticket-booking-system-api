@@ -29,4 +29,10 @@ public class UserController {
         UserResponse userResponse = UserMapper.toUserResponse(updatedUser);
         return restResponseBuilder.success(HttpStatus.OK, "User profile updated successfully", userResponse);
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<ResponseStructure<String>> softDeleteUser(@RequestParam("userId") String userId) {
+        userService.softDeleteUser(userId);
+        return restResponseBuilder.success(HttpStatus.OK, "User soft deleted successfully", "User with id " + userId + " is now deactivated");
+    }
 }
