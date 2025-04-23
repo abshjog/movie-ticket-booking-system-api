@@ -1,6 +1,6 @@
 package com.example.mdb.controller;
 
-import com.example.mdb.dto.UserRegistrationRequest;
+import com.example.mdb.dto.UserRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.entity.UserDetails;
 import com.example.mdb.mapper.UserMapper;
@@ -11,10 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
@@ -24,14 +21,12 @@ public class UserController {
     private final UserService userService;
     private final RestResponseBuilder restResponseBuilder;
 
-    @PostMapping("/register")
-    public ResponseEntity<ResponseStructure<UserResponse>> registerUser(
-            @Valid @RequestBody UserRegistrationRequest registrationRequest) {
-        // Register the user and obtain the persisted entity.
-        UserDetails savedUser = userService.registerUser(registrationRequest);
-        // Convert the entity into a safe, outbound DTO.
-        UserResponse userResponse = UserMapper.toUserResponse(savedUser);
-        // Return the response with a custom structure.
-        return restResponseBuilder.success(HttpStatus.CREATED, "User created successfully", userResponse);
+    @PutMapping("/update")
+    public ResponseEntity<ResponseStructure<UserResponse>> updateUserProfile(
+            @RequestParam("email") String email,   // current email to locate the user
+            @Valid @RequestBody UserRequest userRequest) {
+        UserDetails updatedUser = userService.updateUser(email, userRequest);
+        UserResponse userResponse = UserMapper.toUserResponse(updatedUser);
+        return restResponseBuilder.success(HttpStatus.OK, "User profile updated successfully", userResponse);
     }
 }
