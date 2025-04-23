@@ -2,12 +2,14 @@ package com.example.mdb.entity;
 
 import com.example.mdb.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -43,4 +45,13 @@ public class UserDetails {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
         @UpdateTimestamp
         private LocalDateTime updatedAt;
+
+        // Soft deletion fields (internal only)
+        @JsonIgnore
+        @Column(name = "is_deleted", nullable = false)
+        private boolean isDeleted = false;
+
+        @JsonIgnore
+        @Column(name = "deleted_at")
+        private Instant deletedAt;
 }

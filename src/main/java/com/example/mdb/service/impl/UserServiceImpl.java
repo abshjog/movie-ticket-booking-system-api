@@ -12,6 +12,7 @@ import com.example.mdb.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -64,5 +65,14 @@ public class UserServiceImpl implements UserService {
 
         // Persist the changes and return the updated entity.
         return userRepository.save(existingUser);
+    }
+
+    @Override
+    public void softDeleteUser(String userId) {
+        UserDetails user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        user.setDeleted(true);  // Use setDeleted() instead of setIsDeleted()
+        user.setDeletedAt(Instant.now());
+        userRepository.save(user);
     }
 }

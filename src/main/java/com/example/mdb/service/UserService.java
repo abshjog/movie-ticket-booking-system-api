@@ -11,4 +11,6 @@ public interface UserService {
     UserDetails registerUser(UserRegistrationRequest registrationRequest);
 
     UserDetails updateUser(String email, @Valid UserRequest userRequest);
+
+    void softDeleteUser(String userId);
 }
