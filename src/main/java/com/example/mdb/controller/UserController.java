@@ -1,7 +1,9 @@
 package com.example.mdb.controller;
 
 import com.example.mdb.dto.UserRegistrationRequest;
+import com.example.mdb.dto.UserResponse;
 import com.example.mdb.entity.UserDetails;
+import com.example.mdb.mapper.UserMapper;
 import com.example.mdb.service.UserService;
 import com.example.mdb.utility.ResponseStructure;
 import com.example.mdb.utility.RestResponseBuilder;
@@ -22,11 +24,14 @@ public class UserController {
     private final UserService userService;
     private final RestResponseBuilder restResponseBuilder;
 
-
     @PostMapping("/register")
-    public ResponseEntity<ResponseStructure<UserDetails>> registerUser(
+    public ResponseEntity<ResponseStructure<UserResponse>> registerUser(
             @Valid @RequestBody UserRegistrationRequest registrationRequest) {
+        // Register the user and obtain the persisted entity.
         UserDetails savedUser = userService.registerUser(registrationRequest);
-        return restResponseBuilder.success(HttpStatus.CREATED, "User created successfully", savedUser);
+        // Convert the entity into a safe, outbound DTO.
+        UserResponse userResponse = UserMapper.toUserResponse(savedUser);
+        // Return the response with a custom structure.
+        return restResponseBuilder.success(HttpStatus.CREATED, "User created successfully", userResponse);
     }
 }
