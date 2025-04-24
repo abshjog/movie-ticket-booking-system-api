@@ -27,14 +27,10 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("Email " + registrationRequest.email() + " already exists");
         }
 
-        UserRole role;
-        try {
-            role = UserRole.valueOf(registrationRequest.userRole().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid user role: " + registrationRequest.userRole());
-        }
+        // Directly using the enum value from the registrationRequest
+        UserRole userRole = registrationRequest.userRole();
 
-        UserDetails newUser = createUserEntity(registrationRequest, role);
+        UserDetails newUser = createUserEntity(registrationRequest, userRole);
         return userRepository.save(newUser);
     }
 

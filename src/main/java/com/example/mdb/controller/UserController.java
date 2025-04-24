@@ -1,5 +1,6 @@
 package com.example.mdb.controller;
 
+import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.entity.UserDetails;
@@ -20,6 +21,18 @@ public class UserController {
 
     private final UserService userService;
     private final RestResponseBuilder restResponseBuilder;
+
+    @PostMapping("/register")
+    public ResponseEntity<ResponseStructure<String>> registerUser(
+            @Valid @RequestBody UserRegistrationRequest registrationRequest) {
+        // UserService will process the registration (and typically validate if the email exists, etc.)
+        userService.registerUser(registrationRequest);
+        return restResponseBuilder.success(
+                HttpStatus.CREATED,
+                "User registered successfully",
+                "User with email " + registrationRequest.email() + " registered successfully"
+        );
+    }
 
     @PutMapping("/update")
     public ResponseEntity<ResponseStructure<UserResponse>> updateUserProfile(
