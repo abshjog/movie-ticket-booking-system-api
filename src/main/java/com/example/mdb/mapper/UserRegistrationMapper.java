@@ -10,30 +10,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserRegistrationMapper {
 
-// UserController will accept the DTO and passes it directly to the UserService.
-// UserService is responsible for mapping the DTO into the proper entity before persisting it.
-    public UserDetails toEntity(UserRegistrationRequest dto) {
-        // Convert the `userRole` string from the DTO to the enum type.
-        // Assuming that an enum like UserRole.THEATER_OWNER and UserRole.USER exist.
-        UserRole role = UserRole.valueOf(dto.userRole().toUpperCase());
+    public UserDetails toEntity(UserRegistrationRequest registrationRequest) {
+        // Directly obtain the userRole from the registrationRequest.
+        UserRole userRole = registrationRequest.userRole();
 
-        if (role == UserRole.THEATER_OWNER) {
+        if (userRole == UserRole.THEATER_OWNER) {
             TheaterOwner owner = new TheaterOwner();
-            owner.setUsername(dto.username());
-            owner.setEmail(dto.email());
-            owner.setPassword(dto.password());
-            owner.setDateOfBirth(dto.dateOfBirth());
-            owner.setPhoneNumber(dto.phoneNumber());
-            owner.setUserRole(role);
+            owner.setUsername(registrationRequest.username());
+            owner.setEmail(registrationRequest.email());
+            owner.setPassword(registrationRequest.password());
+            owner.setDateOfBirth(registrationRequest.dateOfBirth());
+            owner.setPhoneNumber(registrationRequest.phoneNumber());
+            owner.setUserRole(userRole);
             return owner;
         } else {
             User user = new User();
-            user.setUsername(dto.username());
-            user.setEmail(dto.email());
-            user.setPassword(dto.password());
-            user.setDateOfBirth(dto.dateOfBirth());
-            user.setPhoneNumber(dto.phoneNumber());
-            user.setUserRole(role);
+            user.setUsername(registrationRequest.username());
+            user.setEmail(registrationRequest.email());
+            user.setPassword(registrationRequest.password());
+            user.setDateOfBirth(registrationRequest.dateOfBirth());
+            user.setPhoneNumber(registrationRequest.phoneNumber());
+            user.setUserRole(userRole);
             return user;
         }
     }
