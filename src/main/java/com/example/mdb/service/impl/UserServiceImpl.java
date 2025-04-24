@@ -2,24 +2,28 @@ package com.example.mdb.service.impl;
 
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserRequest;
+import com.example.mdb.dto.UserResponse;
 import com.example.mdb.entity.TheaterOwner;
 import com.example.mdb.entity.User;
 import com.example.mdb.entity.UserDetails;
 import com.example.mdb.enums.UserRole;
 import com.example.mdb.exception.EmailAlreadyExistsException;
+import com.example.mdb.exception.UserNotFoundByEmailException;
+import com.example.mdb.mapper.UserMapper;
 import com.example.mdb.repository.UserRepository;
 import com.example.mdb.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @AllArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     public UserDetails registerUser(UserRegistrationRequest registrationRequest) {
@@ -47,14 +51,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails updateUser(String email, UserRequest userRequest) {
-        // Retrieve the existing user using the provided email.
-        Optional<UserDetails> optionalUser = userRepository.findByEmail(email);
-        if (optionalUser.isEmpty()) {
+        UserDetails existingUser = userRepository.findByEmail(email);
+        if (existingUser == null) {
             throw new RuntimeException("User not found with email: " + email);
         }
-        UserDetails existingUser = optionalUser.get();
 
-        // Map the allowed (non-sensitive) update fields from UserRequest.
+        // Update permitted fields from UserRequest.
         existingUser.setUsername(userRequest.username());
         existingUser.setPhoneNumber(userRequest.phoneNumber());
         existingUser.setEmail(userRequest.email()); // Replace the email with the new one
@@ -64,12 +66,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void softDeleteUserByEmail(String email) {
-        UserDetails user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        // Use the generated setter from Lombok (setDeleted)
+    @Transactional
+    public UserResponse softDeleteUser(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new UserNotFoundByEmailException("Email not found in the Database");
+        }
+
+        // Since we know the user exists, fetch the user
+        UserDetails user = userRepository.findByEmail(email);
+
+        // Encapsulate the soft-delete behavior within the entity
         user.setDeleted(true);
         user.setDeletedAt(Instant.now());
-        userRepository.save(user);
+
+        // Save the updated user using repository save
+        UserDetails updatedUser = userRepository.save(user);
+
+        // Build the response directly without relying on an external mapper
+        return new UserResponse(
+                updatedUser.getUserId(),
+                updatedUser.getUsername(),
+                updatedUser.getEmail(),
+                updatedUser.getUserRole().toString(),
+                updatedUser.getDateOfBirth(),
+                updatedUser.getPhoneNumber()
+        );
     }
 }
