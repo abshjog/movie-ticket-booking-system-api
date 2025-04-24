@@ -42,12 +42,32 @@ public class TheaterServiceImpl implements TheaterService {
         throw new TheaterNotFoundByIdException("Theater not found by the entered ID");
     }
 
+    @Override
+    public TheaterResponse updateTheater(String theaterId, TheaterRegistrationRequest registrationRequest) {
+        if(theaterRepository.existsById(theaterId)) {
+            Theater theater = theaterRepository.findById(theaterId).get();
+            theater = copy(registrationRequest, theater);
+            return theaterMapper.theaterResponseMapper(theater);
+        }
+        throw new TheaterNotFoundByIdException("Theater not found by id");
+    }
+
     private Theater copy(TheaterRegistrationRequest registrationRequest, Theater theater , UserDetails userDetails) {
         theater.setAddress(registrationRequest.address());
         theater.setCity(registrationRequest.city());
         theater.setName(registrationRequest.name());
         theater.setLandmark(registrationRequest.landmark());
         theater.setTheaterOwner((TheaterOwner) userDetails);
+        theaterRepository.save(theater);
+        return theater;
+    }
+
+    private Theater copy(TheaterRegistrationRequest registrationRequest, Theater theater) {
+
+        theater.setAddress(registrationRequest.address());
+        theater.setCity(registrationRequest.city());
+        theater.setName(registrationRequest.name());
+        theater.setLandmark(registrationRequest.landmark());
         theaterRepository.save(theater);
         return theater;
     }
