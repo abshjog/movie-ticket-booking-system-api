@@ -36,4 +36,10 @@ public class TheaterController {
 //        List<TheaterResponse> theaterList = theaterService.findAllTheaters();
 //        return responseBuilder.success(HttpStatus.OK, "All theaters fetched successfully", theaterList);
 //    }
+
+    @PutMapping("/theaters/{theaterId}")
+    public ResponseEntity<ResponseStructure<TheaterResponse>> updateTheater(@PathVariable String theaterId, @Valid @RequestBody TheaterRegistrationRequest registrationRequest){
+        TheaterResponse theaterResponse = theaterService.updateTheater(theaterId, registrationRequest);
+        return responseBuilder.success(HttpStatus.OK, "Theater details have been updated successfully.", theaterResponse);
+    }
 }
