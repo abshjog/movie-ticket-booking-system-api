@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -34,7 +33,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/update")
+    @PutMapping("/users/{email}")
     public ResponseEntity<ResponseStructure<UserResponse>> updateUserProfile(
             @RequestParam("email") String email,   // current email to locate the user
             @Valid @RequestBody UserRequest userRequest) {
@@ -43,13 +42,9 @@ public class UserController {
         return restResponseBuilder.success(HttpStatus.OK, "User profile updated successfully", userResponse);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<ResponseStructure<String>> deleteUser(@RequestParam("email") String email) {
-        userService.softDeleteUserByEmail(email);
-        return restResponseBuilder.success(
-                HttpStatus.OK,
-                "User account soft deleted successfully",
-                "User with email " + email + " has now been deleted"
-        );
+    @DeleteMapping("/users/{email}")
+    public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(@PathVariable String email) {
+        UserResponse userDetails = userService.softDeleteUser(email);
+        return restResponseBuilder.success(HttpStatus.OK, "UserDetails account has been deleted", userDetails);
     }
 }

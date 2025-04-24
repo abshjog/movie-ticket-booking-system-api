@@ -3,11 +3,11 @@ package com.example.mdb.exception;
 import lombok.Getter;
 
 @Getter
-public class EmailAlreadyExistsException extends RuntimeException {
+public class UserNotFoundByEmailException extends RuntimeException{
 
     private String message;
 
-    public EmailAlreadyExistsException(String message) {
+    public UserNotFoundByEmailException(String message) {
         this.message = message;
     }
 }
