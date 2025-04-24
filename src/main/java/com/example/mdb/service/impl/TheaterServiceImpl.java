@@ -6,6 +6,7 @@ import com.example.mdb.entity.Theater;
 import com.example.mdb.entity.TheaterOwner;
 import com.example.mdb.entity.UserDetails;
 import com.example.mdb.enums.UserRole;
+import com.example.mdb.exception.TheaterNotFoundByIdException;
 import com.example.mdb.exception.UserNotFoundByEmailException;
 import com.example.mdb.mapper.TheaterMapper;
 import com.example.mdb.repository.TheaterRepository;
@@ -30,6 +31,15 @@ public class TheaterServiceImpl implements TheaterService {
             return theaterMapper.theaterResponseMapper(theater);
         }
         throw new UserNotFoundByEmailException("Theater Owner with the provided email is not present");
+    }
+
+    @Override
+    public TheaterResponse findTheater(String theaterId) {
+        if(theaterRepository.existsById(theaterId)){
+            Theater theater = theaterRepository.findById(theaterId).get();
+            return theaterMapper.theaterResponseMapper(theater);
+        }
+        throw new TheaterNotFoundByIdException("Theater not found by the entered ID");
     }
 
     private Theater copy(TheaterRegistrationRequest registrationRequest, Theater theater , UserDetails userDetails) {

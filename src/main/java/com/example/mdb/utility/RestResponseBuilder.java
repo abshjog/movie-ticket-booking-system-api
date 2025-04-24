@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class RestResponseBuilder {
 
     // API method for a successful response
-    public static <T> ResponseEntity<ResponseStructure<T>> success(HttpStatus status, String message, T data) {
+    public <T> ResponseEntity<ResponseStructure<T>> success(HttpStatus status, String message, T data) {
         ResponseStructure<T> responseStructure = ResponseStructure
                 .<T>builder()
                 .statusCode(status.value())
@@ -21,7 +21,7 @@ public class RestResponseBuilder {
     }
 
     // API method for an error response
-    public static <T> ResponseEntity<ErrorStructure<T>> error(HttpStatus errorCode, String errorMessage) {
+    public <T> ResponseEntity<ErrorStructure<T>> error(HttpStatus errorCode, String errorMessage) {
         ErrorStructure<T> errorStructure = ErrorStructure
                 .<T>builder()
                 .errorCode(errorCode.value())
