@@ -1,6 +1,6 @@
 package com.example.mdb.controller;
 
-import com.example.mdb.dto.TheaterRegistrationRequest;
+import com.example.mdb.dto.TheaterRequest;
 import com.example.mdb.dto.TheaterResponse;
 import com.example.mdb.service.TheaterService;
 import com.example.mdb.utility.ResponseStructure;
@@ -19,27 +19,20 @@ public class TheaterController {
     private final RestResponseBuilder responseBuilder;
 
     @PostMapping("/theaters")
-    public ResponseEntity<ResponseStructure<TheaterResponse>> addTheater(String email, @Valid @RequestBody TheaterRegistrationRequest theaterRegistrationRequest){
-        TheaterResponse theaterResponse = theaterService.addTheater(email, theaterRegistrationRequest);
-        return responseBuilder.success(HttpStatus.OK, "Theater has been created successfully.", theaterResponse);
+    public ResponseEntity<ResponseStructure<TheaterResponse>> addTheater(String email, @Valid @RequestBody TheaterRequest theaterRequest){
+        TheaterResponse theaterResponse = theaterService.addTheater(email, theaterRequest);
+        return responseBuilder.success(HttpStatus.OK, "Theater created successfully", theaterResponse);
     }
 
     @GetMapping("theaters/{theaterId}")
     public ResponseEntity<ResponseStructure<TheaterResponse>> findTheater(@PathVariable String theaterId){
         TheaterResponse theaterResponse = theaterService.findTheater(theaterId);
-        return responseBuilder.success(HttpStatus.OK, "Theater details successfully fetched", theaterResponse);
+        return responseBuilder.success(HttpStatus.OK, "Theater fetched successfully", theaterResponse);
     }
 
-    // To fetch all theatres.
-//    @GetMapping("theaters")
-//    public ResponseEntity<ResponseStructure<List<TheaterResponse>>> findAllTheaters(){
-//        List<TheaterResponse> theaterList = theaterService.findAllTheaters();
-//        return responseBuilder.success(HttpStatus.OK, "All theaters fetched successfully", theaterList);
-//    }
-
     @PutMapping("/theaters/{theaterId}")
-    public ResponseEntity<ResponseStructure<TheaterResponse>> updateTheater(@PathVariable String theaterId, @Valid @RequestBody TheaterRegistrationRequest registrationRequest){
-        TheaterResponse theaterResponse = theaterService.updateTheater(theaterId, registrationRequest);
-        return responseBuilder.success(HttpStatus.OK, "Theater details have been updated successfully.", theaterResponse);
+    public ResponseEntity<ResponseStructure<TheaterResponse>> updateTheater(@PathVariable String theaterId, @Valid @RequestBody TheaterRequest theaterRequest){
+        TheaterResponse theaterResponse = theaterService.updateTheater(theaterId, theaterRequest);
+        return responseBuilder.success(HttpStatus.OK, "Theater updated successfully", theaterResponse);
     }
 }
