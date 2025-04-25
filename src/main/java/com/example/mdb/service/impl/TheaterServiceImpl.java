@@ -1,6 +1,6 @@
 package com.example.mdb.service.impl;
 
-import com.example.mdb.dto.TheaterRegistrationRequest;
+import com.example.mdb.dto.TheaterRequest;
 import com.example.mdb.dto.TheaterResponse;
 import com.example.mdb.entity.Theater;
 import com.example.mdb.entity.TheaterOwner;
@@ -24,13 +24,25 @@ public class TheaterServiceImpl implements TheaterService {
     private final UserRepository userRepository;
 
     @Override
-    public TheaterResponse addTheater(String email, TheaterRegistrationRequest theaterRegistrationRequest) {
-        if(userRepository.existsByEmail(email) && userRepository.findByEmail(email).getUserRole() == UserRole.THEATER_OWNER ){
+    public TheaterResponse addTheater(String email, TheaterRequest theaterRequest) {
+
+        if (userRepository.existsByEmail(email) && userRepository.findByEmail(email).getUserRole() == UserRole.THEATER_OWNER) {
             UserDetails user = userRepository.findByEmail(email);
-            Theater theater = copy(theaterRegistrationRequest, new Theater(), user);
+            Theater theater = copy(theaterRequest, new Theater(), user);
             return theaterMapper.theaterResponseMapper(theater);
         }
         throw new UserNotFoundByEmailException("Theater Owner with the provided email is not present");
+    }
+
+    private Theater copy(TheaterRequest theaterRequest, Theater theater, UserDetails user) {
+
+        theater.setAddress(theaterRequest.address());
+        theater.setCity(theaterRequest.city());
+        theater.setName(theaterRequest.name());
+        theater.setLandmark(theaterRequest.landmark());
+        theater.setTheaterOwner((TheaterOwner) user);
+        theaterRepository.save(theater);
+        return theater;
     }
 
     @Override
@@ -43,31 +55,21 @@ public class TheaterServiceImpl implements TheaterService {
     }
 
     @Override
-    public TheaterResponse updateTheater(String theaterId, TheaterRegistrationRequest registrationRequest) {
+    public TheaterResponse updateTheater(String theaterId, TheaterRequest theaterRequest) {
         if(theaterRepository.existsById(theaterId)) {
             Theater theater = theaterRepository.findById(theaterId).get();
-            theater = copy(registrationRequest, theater);
+            theater = copy(theaterRequest, theater);
             return theaterMapper.theaterResponseMapper(theater);
         }
         throw new TheaterNotFoundByIdException("Theater not found by id");
     }
 
-    private Theater copy(TheaterRegistrationRequest registrationRequest, Theater theater , UserDetails userDetails) {
-        theater.setAddress(registrationRequest.address());
-        theater.setCity(registrationRequest.city());
-        theater.setName(registrationRequest.name());
-        theater.setLandmark(registrationRequest.landmark());
-        theater.setTheaterOwner((TheaterOwner) userDetails);
-        theaterRepository.save(theater);
-        return theater;
-    }
+    private Theater copy(TheaterRequest theaterRequest, Theater theater) {
 
-    private Theater copy(TheaterRegistrationRequest registrationRequest, Theater theater) {
-
-        theater.setAddress(registrationRequest.address());
-        theater.setCity(registrationRequest.city());
-        theater.setName(registrationRequest.name());
-        theater.setLandmark(registrationRequest.landmark());
+        theater.setAddress(theaterRequest.address());
+        theater.setCity(theaterRequest.city());
+        theater.setName(theaterRequest.name());
+        theater.setLandmark(theaterRequest.landmark());
         theaterRepository.save(theater);
         return theater;
     }

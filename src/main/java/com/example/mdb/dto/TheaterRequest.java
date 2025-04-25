@@ -3,7 +3,7 @@ package com.example.mdb.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record TheaterRegistrationRequest(
+public record TheaterRequest(
 
         @NotBlank(message = "Theater name is required")
         @Size(min = 3, max = 25, message = "Theater name cannot be blank")
@@ -14,7 +14,7 @@ public record TheaterRegistrationRequest(
         String address,
 
         @NotBlank(message = "City is required")
-        @Size(min = 2, max = 25, message = "City cannot be blank")
+        @Size(min = 3, max = 20, message = "City cannot be blank")
         String city,
 
         @NotBlank(message = "Landmark is required")
