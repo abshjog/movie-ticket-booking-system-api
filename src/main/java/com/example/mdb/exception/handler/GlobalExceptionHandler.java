@@ -11,9 +11,9 @@ public class GlobalExceptionHandler {
 
     public ResponseEntity<ErrorStructure<String>> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex) {
         ErrorStructure<String> errorResponse = ErrorStructure.<String>builder()
-                .errorCode(HttpStatus.CONFLICT.value())
+                .status(HttpStatus.CONFLICT.value())
                 .message(ex.getMessage())
-                .data("A user with the given email already exists in the Database.")
+                .error("A user with the given email already exists in the Database.")
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);

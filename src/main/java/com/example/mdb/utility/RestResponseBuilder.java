@@ -21,12 +21,13 @@ public class RestResponseBuilder {
     }
 
     // API method for an error response
-    public <T> ResponseEntity<ErrorStructure<T>> error(HttpStatus errorCode, String errorMessage) {
+    public <T> ResponseEntity<ErrorStructure<T>> error(HttpStatus status, String message, T error) {
         ErrorStructure<T> errorStructure = ErrorStructure
                 .<T>builder()
-                .errorCode(errorCode.value())
-                .message(errorMessage)
+                .status(status.value())
+                .message(message)
+                .error(error)
                 .build();
-        return ResponseEntity.status(errorCode).body(errorStructure);
+        return ResponseEntity.status(status).body(errorStructure);
     }
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Builder
 public class ErrorStructure<T> {
 
-    private int errorCode;
+    private int status;
     private String message;
-    private T data;
+    private T error;
 }
