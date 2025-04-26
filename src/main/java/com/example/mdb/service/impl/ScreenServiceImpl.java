@@ -5,6 +5,7 @@ import com.example.mdb.dto.ScreenResponse;
 import com.example.mdb.entity.Screen;
 import com.example.mdb.entity.Seat;
 import com.example.mdb.entity.Theater;
+import com.example.mdb.exception.ScreenNotFoundByIdException;
 import com.example.mdb.exception.TheaterNotFoundByIdException;
 import com.example.mdb.mapper.ScreenMapper;
 import com.example.mdb.repository.ScreenRepository;
@@ -35,6 +36,17 @@ public class ScreenServiceImpl implements ScreenService {
         }
 
         throw new TheaterNotFoundByIdException("No Theater found by ID");
+    }
+
+    @Override
+    public ScreenResponse findScreen(String theaterId, String screenId) {
+        if(theaterRepository.existsById(theaterId)){
+            if(screenRepository.existsById(screenId)){
+                return screenMapper.screenResponseMapper(screenRepository.findById(screenId).get());
+            }
+            throw new ScreenNotFoundByIdException("Screen Not Found by Id");
+        }
+        throw new TheaterNotFoundByIdException("Theater not found by Id");
     }
 
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater){

@@ -16,7 +16,7 @@ public class TheaterExceptionHandler {
     private final RestResponseBuilder responseBuilder;
 
     @ExceptionHandler(TheaterNotFoundByIdException.class)
-    public ResponseEntity<ErrorStructure<Object>> handleTheaterNotFoundByIdException(TheaterNotFoundByIdException ex) {
-        return responseBuilder.error(HttpStatus.NOT_FOUND, "Theater with the requested ID not found");
+    public ResponseEntity<ErrorStructure<String>> handleTheaterNotFoundByIdException(TheaterNotFoundByIdException ex) {
+        return responseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "Theater with the requested ID not found");
     }
 }
