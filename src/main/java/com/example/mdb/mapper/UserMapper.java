@@ -12,11 +12,10 @@ public class UserMapper {
         if(user == null)
             return null;
         return new UserResponse(
-                user.getUserId(),                     // The unique identifier for the user
+                user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getUserRole().name(),          // Converting enum to String
-                user.getDateOfBirth(),
+                user.getUserRole().name(),
                 user.getPhoneNumber()
         );
     }

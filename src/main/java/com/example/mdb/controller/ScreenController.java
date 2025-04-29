@@ -8,6 +8,7 @@ import com.example.mdb.utility.RestResponseBuilder;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +19,7 @@ public class ScreenController {
     private final RestResponseBuilder responseBuilder;
 
     @PostMapping("theaters/{theaterId}/screens")
+    @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<ScreenResponse>> addScreen(@RequestBody ScreenRequest screenRequest, @PathVariable String theaterId){
         ScreenResponse screenResponse = screenService.addScreen(screenRequest, theaterId);
         return responseBuilder.success(HttpStatus.OK, "Screen has been successfully created", screenResponse);

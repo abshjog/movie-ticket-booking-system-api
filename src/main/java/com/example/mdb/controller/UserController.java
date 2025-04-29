@@ -3,6 +3,7 @@ package com.example.mdb.controller;
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserRequest;
 import com.example.mdb.dto.UserResponse;
+import com.example.mdb.dto.UserUpdationRequest;
 import com.example.mdb.entity.UserDetails;
 import com.example.mdb.mapper.UserMapper;
 import com.example.mdb.service.UserService;
@@ -22,29 +23,20 @@ public class UserController {
     private final RestResponseBuilder restResponseBuilder;
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseStructure<String>> registerUser(
-            @Valid @RequestBody UserRegistrationRequest registrationRequest) {
-        // UserService will process the registration (and typically validate if the email exists, etc.)
-        userService.registerUser(registrationRequest);
-        return restResponseBuilder.success(
-                HttpStatus.CREATED,
-                "User registered successfully",
-                "User with email " + registrationRequest.email() + " registered successfully"
-        );
+    public ResponseEntity<ResponseStructure<UserResponse>> addUser(@RequestBody @Valid UserRegistrationRequest user){
+        UserResponse userDetails = userService.addUser(user);
+        return restResponseBuilder.success(HttpStatus.OK,"New User Details Has been added", userDetails);
     }
 
     @PutMapping("/users/{email}")
-    public ResponseEntity<ResponseStructure<UserResponse>> updateUserProfile(
-            @RequestParam("email") String email,   // current email to locate the user
-            @Valid @RequestBody UserRequest userRequest) {
-        UserDetails updatedUser = userService.updateUser(email, userRequest);
-        UserResponse userResponse = UserMapper.toUserResponse(updatedUser);
-        return restResponseBuilder.success(HttpStatus.OK, "User profile updated successfully", userResponse);
+    public ResponseEntity<ResponseStructure<UserResponse>> updateUser(@PathVariable String email, @RequestBody @Valid UserUpdationRequest user){
+        UserResponse userDetails = userService.updateUser(user, email);
+        return restResponseBuilder.success(HttpStatus.OK,"User Details has been updated", userDetails);
     }
 
     @DeleteMapping("/users/{email}")
-    public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(@PathVariable String email) {
+    public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(@PathVariable String email){
         UserResponse userDetails = userService.softDeleteUser(email);
-        return restResponseBuilder.success(HttpStatus.OK, "UserDetails account has been deleted", userDetails);
+        return restResponseBuilder.success(HttpStatus.OK,"UserDetails account has been deleted ", userDetails);
     }
 }
