@@ -7,8 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
@@ -30,24 +30,22 @@ public class UserDetails {
 
         private String username;
 
-        @Column(unique = true) // Ensures that each email value is unique across the table
+        @Column(unique = true)
         private String email;
 
         private String password;
         private String phoneNumber;
 
         @Enumerated(EnumType.STRING)
-        @Column(length = 20) // Max 20 chars: ensures enum values (e.g., THEATER_OWNER) fit without truncation
         private UserRole userRole;
 
         private LocalDate dateOfBirth;
 
-        @CreationTimestamp
+        @CreatedDate
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
         private LocalDateTime createdAt;
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
-        @UpdateTimestamp
+        @LastModifiedDate
         private LocalDateTime updatedAt;
 
         // Soft deletion fields (internal only)

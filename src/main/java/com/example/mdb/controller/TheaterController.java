@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
@@ -19,6 +20,7 @@ public class TheaterController {
     private final RestResponseBuilder responseBuilder;
 
     @PostMapping("/theaters")
+    @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<TheaterResponse>> addTheater(String email, @Valid @RequestBody TheaterRequest theaterRequest){
         TheaterResponse theaterResponse = theaterService.addTheater(email, theaterRequest);
         return responseBuilder.success(HttpStatus.OK, "Theater created successfully", theaterResponse);

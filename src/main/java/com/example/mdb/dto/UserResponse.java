@@ -3,10 +3,9 @@ package com.example.mdb.dto;
 import java.time.LocalDate;
 
 public record UserResponse(
-        String id,
+        String userId,
         String username,
         String email,
-        String role,
-        LocalDate dateOfBirth,
+        String userRole,
         String phoneNumber
 ) {}
