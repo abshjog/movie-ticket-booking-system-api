@@ -6,11 +6,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -22,14 +23,20 @@ public class Screen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "screen_id")
     private String screenId;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "screen_type")
     private ScreenType screenType;
+
+    @Column(name = "capacity")
     private Integer capacity;
+
+    @Column(name = "no_of_rows")
     private Integer noOfRows;
 
     @ManyToOne
+    @JoinColumn(name = "theater_id")
     private Theater theater;
 
     @OneToMany(mappedBy = "screen", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
@@ -38,10 +45,14 @@ public class Screen {
     private List<Seat> seats;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
+    @CreatedBy
+    @Column(name = "created_by")
     private String createdBy;
 }
