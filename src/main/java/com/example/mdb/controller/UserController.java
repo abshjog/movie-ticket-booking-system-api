@@ -25,18 +25,18 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ResponseStructure<UserResponse>> addUser(@RequestBody @Valid UserRegistrationRequest user){
         UserResponse userDetails = userService.addUser(user);
-        return restResponseBuilder.success(HttpStatus.OK,"New User Details Has been added", userDetails);
+        return restResponseBuilder.success(HttpStatus.OK,"New User has been successfully created", userDetails);
     }
 
     @PutMapping("/users/{email}")
     public ResponseEntity<ResponseStructure<UserResponse>> updateUser(@PathVariable String email, @RequestBody @Valid UserUpdationRequest user){
         UserResponse userDetails = userService.updateUser(user, email);
-        return restResponseBuilder.success(HttpStatus.OK,"User Details has been updated", userDetails);
+        return restResponseBuilder.success(HttpStatus.OK,"User Details have been updated successfully", userDetails);
     }
 
     @DeleteMapping("/users/{email}")
     public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(@PathVariable String email){
         UserResponse userDetails = userService.softDeleteUser(email);
-        return restResponseBuilder.success(HttpStatus.OK,"UserDetails account has been deleted ", userDetails);
+        return restResponseBuilder.success(HttpStatus.OK,"User account has been successfully deleted", userDetails);
     }
 }

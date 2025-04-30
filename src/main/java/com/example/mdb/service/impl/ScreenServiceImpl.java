@@ -36,7 +36,7 @@ public class ScreenServiceImpl implements ScreenService {
             Screen screen = copy(screenRequest, new Screen(), theater);
             return screenMapper.screenResponseMapper(screen);
         }
-        throw new TheaterNotFoundByIdException("No Theater found by ID");
+        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
     }
 
     @Override
@@ -45,9 +45,9 @@ public class ScreenServiceImpl implements ScreenService {
             if (screenRepository.existsById(screenId)) {
                 return screenMapper.screenResponseMapper(screenRepository.findById(screenId).get());
             }
-            throw new ScreenNotFoundByIdException("Screen Not Found by Id");
+            throw new ScreenNotFoundByIdException("Screen not found by the provided ID");
         }
-        throw new TheaterNotFoundByIdException("Theater not found by Id");
+        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
     }
 
 
@@ -55,8 +55,9 @@ public class ScreenServiceImpl implements ScreenService {
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
         screen.setScreenType(screenRequest.screenType());
         screen.setCapacity(screenRequest.capacity());
-        if (screenRequest.noOfRows() > screenRequest.capacity())
-            throw new RowLimitExceededException("The no.of rows exceed the capacity");
+        if (screenRequest.noOfRows() > screenRequest.capacity()) {
+            throw new RowLimitExceededException("Number of rows exceeds the capacity");
+        }
         screen.setNoOfRows(screenRequest.noOfRows());
         screen.setTheater(theater);
         screenRepository.save(screen);
