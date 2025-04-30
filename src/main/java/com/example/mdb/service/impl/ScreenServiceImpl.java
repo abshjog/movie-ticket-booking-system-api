@@ -5,6 +5,7 @@ import com.example.mdb.dto.ScreenResponse;
 import com.example.mdb.entity.Screen;
 import com.example.mdb.entity.Seat;
 import com.example.mdb.entity.Theater;
+import com.example.mdb.exception.RowLimitExceededException;
 import com.example.mdb.exception.ScreenNotFoundByIdException;
 import com.example.mdb.exception.TheaterNotFoundByIdException;
 import com.example.mdb.mapper.ScreenMapper;
@@ -29,19 +30,19 @@ public class ScreenServiceImpl implements ScreenService {
 
     @Override
     public ScreenResponse addScreen(ScreenRequest screenRequest, String theaterId) {
+
         if (theaterRepository.existsById(theaterId)) {
             Theater theater = theaterRepository.findById(theaterId).get();
             Screen screen = copy(screenRequest, new Screen(), theater);
             return screenMapper.screenResponseMapper(screen);
         }
-
         throw new TheaterNotFoundByIdException("No Theater found by ID");
     }
 
     @Override
     public ScreenResponse findScreen(String theaterId, String screenId) {
-        if(theaterRepository.existsById(theaterId)){
-            if(screenRepository.existsById(screenId)){
+        if (theaterRepository.existsById(theaterId)) {
+            if (screenRepository.existsById(screenId)) {
                 return screenMapper.screenResponseMapper(screenRepository.findById(screenId).get());
             }
             throw new ScreenNotFoundByIdException("Screen Not Found by Id");
@@ -49,13 +50,17 @@ public class ScreenServiceImpl implements ScreenService {
         throw new TheaterNotFoundByIdException("Theater not found by Id");
     }
 
-    private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater){
+
+
+    private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
         screen.setScreenType(screenRequest.screenType());
         screen.setCapacity(screenRequest.capacity());
+        if (screenRequest.noOfRows() > screenRequest.capacity())
+            throw new RowLimitExceededException("The no.of rows exceed the capacity");
         screen.setNoOfRows(screenRequest.noOfRows());
         screen.setTheater(theater);
         screenRepository.save(screen);
-        screen.setSeats(createSeats(screen, screenRequest.capacity() ));
+        screen.setSeats(createSeats(screen, screenRequest.capacity()));
         return screen;
     }
 
@@ -66,6 +71,7 @@ public class ScreenServiceImpl implements ScreenService {
         for (int i = 1, j = 1; i <= capacity; i++, j++) {
             Seat seat = new Seat();
             seat.setScreen(screen);
+            seat.setDelete(false);
             seat.setName(row + "" + j);
             seatRepository.save(seat);
             seats.add(seat);

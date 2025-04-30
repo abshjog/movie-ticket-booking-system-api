@@ -28,14 +28,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse addUser(UserRegistrationRequest user) {
         if (userRepository.existsByEmail(user.email()))
-            throw new EmailAlreadyExistsException("User with the Email already exists");
+            throw new EmailAlreadyExistsException("User with the Email is already exists");
 
         UserDetails userDetails = switch (user.userRole()) {
             case USER -> copy(new User(), user);
             case THEATER_OWNER -> copy(new TheaterOwner(), user);
         };
         return userMapper.toUserResponse(userDetails);
-
     }
 
     @Override
@@ -46,14 +45,11 @@ public class UserServiceImpl implements UserService {
             if (! user.getEmail().equals(userRequest.email()) && userRepository.existsByEmail(userRequest.email())){
                 throw new EmailAlreadyExistsException("User with the email already exists");
             }
-
             user = copy(user, userRequest);
 
             return userMapper.toUserResponse(user);
         }
-
         throw new UserNotFoundByEmailException("Email not found in the Database");
-
     }
 
     @Override

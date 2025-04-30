@@ -1,8 +1,6 @@
 package com.example.mdb.entity;
 
 import com.example.mdb.enums.UserRole;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,35 +23,40 @@ import java.time.LocalDateTime;
 public class UserDetails {
 
         @Id
-        @GeneratedValue(strategy = GenerationType.UUID) // Auto-generate a unique UUID
+        @GeneratedValue(strategy = GenerationType.UUID)
+        @Column(name = "user_id")
         private String userId;
 
+        @Column(name = "username")
         private String username;
 
-        @Column(unique = true)
+        @Column(unique = true, name = "email")
         private String email;
 
+        @Column(name = "password")
         private String password;
+
+        @Column(name = "phone_number", length = 10)
         private String phoneNumber;
 
-        @Enumerated(EnumType.STRING)
+        @Enumerated(value = EnumType.STRING)
+        @Column(name = "user_role")
         private UserRole userRole;
 
+        @Column(name = "dob")
         private LocalDate dateOfBirth;
 
-        @CreatedDate
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
-        private LocalDateTime createdAt;
+        @Column(name = "is_deleted")
+        private boolean isDeleted;
 
-        @LastModifiedDate
-        private LocalDateTime updatedAt;
-
-        // Soft deletion fields (internal only)
-        @JsonIgnore
-        @Column(name = "is_deleted", nullable = false)
-        private boolean isDeleted = false;
-
-        @JsonIgnore
         @Column(name = "deleted_at")
         private Instant deletedAt;
+
+        @CreatedDate
+        @Column(name = "created_at", nullable = false, updatable = false)
+        private Instant createdAt;
+
+        @LastModifiedDate
+        @Column(name = "updated_at", nullable = false)
+        private Instant updatedAt;
 }
