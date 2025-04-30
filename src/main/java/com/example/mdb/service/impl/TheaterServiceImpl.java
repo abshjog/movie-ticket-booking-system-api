@@ -31,7 +31,7 @@ public class TheaterServiceImpl implements TheaterService {
             Theater theater = copy(theaterRequest, new Theater(), user);
             return theaterMapper.theaterResponseMapper(theater);
         }
-        throw new UserNotFoundByEmailException("Theater Owner with the provided email is not present");
+        throw new UserNotFoundByEmailException("Theater Owner with the provided email is not found");
     }
 
     private Theater copy(TheaterRequest theaterRequest, Theater theater, UserDetails user) {
@@ -61,7 +61,7 @@ public class TheaterServiceImpl implements TheaterService {
             theater = copy(theaterRequest, theater);
             return theaterMapper.theaterResponseMapper(theater);
         }
-        throw new TheaterNotFoundByIdException("Theater not found by id");
+        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
     }
 
     private Theater copy(TheaterRequest theaterRequest, Theater theater) {

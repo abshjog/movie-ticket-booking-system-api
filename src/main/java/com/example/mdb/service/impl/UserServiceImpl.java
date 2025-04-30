@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
             UserDetails user = userRepository.findByEmail(email);
 
             if (! user.getEmail().equals(userRequest.email()) && userRepository.existsByEmail(userRequest.email())){
-                throw new EmailAlreadyExistsException("User with the email already exists");
+                throw new EmailAlreadyExistsException("User with the provided email already exists");
             }
             user = copy(user, userRequest);
 
             return userMapper.toUserResponse(user);
         }
-        throw new UserNotFoundByEmailException("Email not found in the Database");
+        throw new UserNotFoundByEmailException("Provided email not found in the Database");
     }
 
     @Override
