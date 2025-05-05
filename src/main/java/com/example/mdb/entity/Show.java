@@ -1,7 +1,5 @@
 package com.example.mdb.entity;
 
-import com.example.mdb.enums.ScreenType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,29 +10,24 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @ToString
 @EntityListeners(AuditingEntityListener.class)
-public class Screen {
+public class Show {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "screen_id")
-    private String screenId;
+    @Column(name = "show_id")
+    private String showId;
 
-    @Column(name = "screen_type")
-    private ScreenType screenType;
+    @Column(name = "starts_at")
+    private Instant startsAt;
 
-    @Column(name = "capacity")
-    private Integer capacity;
-
-    @Column(name = "no_of_rows")
-    private Integer noOfRows;
+    @Column(name = "ends_at")
+    private Instant endsAt;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -49,15 +42,10 @@ public class Screen {
     private String createdBy;
 
     @ManyToOne
-    @JoinColumn(name = "theater_id")
-    private Theater theater;
+    @JoinColumn(name = "movie_id")
+    private Movie movie;
 
-    @OneToMany(mappedBy = "screen", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @OrderBy(value = "name")
-    @JsonIgnore
-    private List<Seat> seats;
-
-    @OneToMany(mappedBy = "screen", fetch = FetchType.EAGER)
-    @JsonIgnore
-    private Set<Show> shows;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "screen_id")
+    private Screen screen;
 }

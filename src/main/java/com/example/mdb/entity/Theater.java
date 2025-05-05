@@ -36,12 +36,8 @@ public class Theater {
     @Column(name = "landmark")
     private String landmark;
 
-    @ManyToOne
-    private TheaterOwner theaterOwner;
-
     @OneToMany(mappedBy = "theater")
     private List<Screen> screens;
-
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -53,4 +49,8 @@ public class Theater {
 
     @CreatedBy
     private String createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "theater_owner_id")
+    private TheaterOwner theaterOwner;
 }

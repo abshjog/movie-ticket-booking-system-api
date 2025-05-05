@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -25,20 +26,22 @@ public class Movie {
     private String title;
 
     @Column(name = "description")
-    private String Description;
+    private String description;
 
-    // private String[] Cast;
     @ElementCollection
     private Set<String> castList;
 
     @Column(name = "runtime")
     private Duration runtime;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "certificate")
     private Certificate certificate;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "genre")
     private Genre genre;
+
+    @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
+    private List<Show> shows;
 }
