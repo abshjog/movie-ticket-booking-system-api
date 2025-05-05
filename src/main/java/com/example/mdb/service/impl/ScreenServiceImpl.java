@@ -50,8 +50,6 @@ public class ScreenServiceImpl implements ScreenService {
         throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
     }
 
-
-
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
         screen.setScreenType(screenRequest.screenType());
         screen.setCapacity(screenRequest.capacity());
