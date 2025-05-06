@@ -25,7 +25,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ResponseStructure<UserResponse>> addUser(@RequestBody @Valid UserRegistrationRequest user){
         UserResponse userDetails = userService.addUser(user);
-        return restResponseBuilder.success(HttpStatus.OK,"New User has been successfully created", userDetails);
+        return restResponseBuilder.success(HttpStatus.OK,"New User account has been successfully created", userDetails);
     }
 
     @PutMapping("/users/{email}")
