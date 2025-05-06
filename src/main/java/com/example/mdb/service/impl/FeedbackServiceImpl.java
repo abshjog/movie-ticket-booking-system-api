@@ -29,7 +29,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
             return feedbackMapper.feedbackResponseMapper(feedback);
         }
-        throw new MovieNotFoundByIdException("No movie found in the database");
+        throw new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again.");
     }
 
     private Feedback copy(FeedbackRequest feedbackRequest, Feedback feedback, String movieId, String email) {
