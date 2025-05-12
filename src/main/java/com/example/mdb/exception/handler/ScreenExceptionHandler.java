@@ -18,7 +18,7 @@ public class ScreenExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorStructure<String>> handleRowLimitExceededException(RowLimitExceededException ex) {
-        return responseBuilder.error(HttpStatus.BAD_REQUEST, ex.getMessage(), "Row limit exceeded. Please adjust and try again");
+        return responseBuilder.error(HttpStatus.BAD_REQUEST, ex.getMessage(), "Row limit exceeded. Please try again");
     }
 
     @ExceptionHandler
