@@ -7,16 +7,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public static UserResponse toUserResponse(UserDetails user) {
-
-        if(user == null)
+    public UserResponse userResponseMapper(UserDetails userDetails){
+        if(userDetails == null)
             return null;
-        return new UserResponse(
-                user.getUserId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getUserRole().name(),
-                user.getPhoneNumber()
-        );
+
+        return UserResponse.builder()
+                .userId(userDetails.getUserId())
+                .username(userDetails.getUsername())
+                .email(userDetails.getEmail())
+                .phoneNumber(userDetails.getPhoneNumber())
+                .userRole(userDetails.getUserRole().name())
+                .build();
     }
 }

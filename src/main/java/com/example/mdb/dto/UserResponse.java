@@ -1,7 +1,8 @@
 package com.example.mdb.dto;
 
-import java.time.LocalDate;
+import lombok.Builder;
 
+@Builder
 public record UserResponse(
         String userId,
         String username,

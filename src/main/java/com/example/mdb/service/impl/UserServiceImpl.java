@@ -12,6 +12,7 @@ import com.example.mdb.mapper.UserMapper;
 import com.example.mdb.repository.UserRepository;
 import com.example.mdb.service.UserService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.time.Instant;
 
 @AllArgsConstructor
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -34,22 +36,25 @@ public class UserServiceImpl implements UserService {
             case USER -> copy(new User(), user);
             case THEATER_OWNER -> copy(new TheaterOwner(), user);
         };
-        return userMapper.toUserResponse(userDetails);
+        return userMapper.userResponseMapper(userDetails);
     }
 
     @Override
     public UserResponse updateUser(UserUpdationRequest userRequest, String email) {
+        log.info("editing user...");
         if (userRepository.existsByEmail(email)) {
             UserDetails user = userRepository.findByEmail(email);
-
+            log.info("user is unique");
             if (! user.getEmail().equals(userRequest.email()) && userRepository.existsByEmail(userRequest.email())){
-                throw new EmailAlreadyExistsException("User with the provided email already exists");
+                throw new EmailAlreadyExistsException("User with the email already exists");
             }
+
+            log.info("mapping data...");
             user = copy(user, userRequest);
 
-            return userMapper.toUserResponse(user);
+            return userMapper.userResponseMapper(user);
         }
-        throw new UserNotFoundByEmailException("Provided email not found in the Database");
+        throw new UserNotFoundByEmailException("Email not found in the Database");
     }
 
     @Override
@@ -59,9 +64,9 @@ public class UserServiceImpl implements UserService {
             user.setDeleted(true);
             user.setDeletedAt(Instant.now());
             userRepository.save(user);
-            return userMapper.toUserResponse(user);
+            return userMapper.userResponseMapper(user);
         }
-        throw new UserNotFoundByEmailException("Provided email not found in the Database");
+        throw new UserNotFoundByEmailException("Email not found in the Database");
     }
 
     private UserDetails copy(UserDetails userRole, UserRegistrationRequest user) {

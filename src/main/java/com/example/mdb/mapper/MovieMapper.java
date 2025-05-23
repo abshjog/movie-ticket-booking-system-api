@@ -16,15 +16,15 @@ public class MovieMapper {
         DecimalFormat df = new DecimalFormat("#.##");
         String formattedRatings = df.format(avgRatings);
 
-        return new MovieResponse(
-                movie.getMovieId(),
-                movie.getTitle(),
-                movie.getDescription(),
-                formattedRatings,
-                movie.getRuntime(),
-                movie.getCertificate(),
-                movie.getGenre(),
-                movie.getCastList()
-        );
+        return MovieResponse .builder()
+                .movieId(movie.getMovieId())
+                .title(movie.getTitle())
+                .description(movie.getDescription())
+                .ratings(formattedRatings)
+                .runtime(movie.getRuntime())
+                .certificate(movie.getCertificate())
+                .genre(movie.getGenre())
+                .castList(movie.getCastList())
+                .build();
     }
 }

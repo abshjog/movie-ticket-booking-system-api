@@ -1,16 +1,23 @@
 Spring:
-  #APPLICATION PROPERTIES
+  #Application Properties
   application:
     name: movie-ticket-booking-system-api
+
+  #Datasource Properties
   datasource:
-    driver-class name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mdb?createDatabaseIfNotExist=true
-    username: root
-    password: root
+    url: "${MYSQL_URL:jdbc:mysql://localhost:3306/mdb?createDatabaseIfNotExist=true}"
+    username: "${MYSQL_USERNAME:root}"
+    password: "${MYSQL_PWD:root}"
+
+  #JPA Details
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
+
+# Internal Configuration
+app:
+  token:
+    secret: "${TOKEN_SECRET:6OJTb36NI+zRK83avvt+11tUQGwoHhkA9cC3UM1mxuE=}"# Only for testing and development mode
+    access-duration: "${TOKEN_ACCESS_DURATION:5}" # in minutes
+    refresh-duration: "${TOKEN_REFRESH_DURATION:1440}" #in minutes 24*60

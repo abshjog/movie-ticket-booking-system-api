@@ -15,13 +15,14 @@ public class ScreenMapper {
     public ScreenResponse screenResponseMapper(Screen screen) {
         if (screen == null)
             return null;
-        return new ScreenResponse(
-                screen.getScreenId(),
-                screen.getScreenType(),
-                screen.getCapacity(),
-                screen.getNoOfRows(),
-                seatResponseMapper(screen.getSeats())
-        );
+
+        return ScreenResponse.builder()
+                .screenId(screen.getScreenId())
+                .screenType(screen.getScreenType())
+                .capacity(screen.getCapacity())
+                .noOfRows(screen.getNoOfRows())
+                .seats(seatResponseMapper(screen.getSeats()))
+                .build();
     }
 
     private List<SeatResponse> seatResponseMapper(List<Seat> seats) {

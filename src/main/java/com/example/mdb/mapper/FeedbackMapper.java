@@ -8,13 +8,12 @@ import org.springframework.stereotype.Component;
 public class FeedbackMapper {
 
     public FeedbackResponse feedbackResponseMapper(Feedback feedback) {
-        if (feedback == null) {
+        if (feedback == null)
             return null;
-        }
-        return new FeedbackResponse(
-                feedback.getFeedbackId(),
-                feedback.getRating(),
-                feedback.getReview()
-        );
+        return FeedbackResponse.builder()
+                .feedbackId(feedback.getFeedbackId())
+                .rating(feedback.getRating())
+                .review(feedback.getReview())
+                .build();
     }
 }
