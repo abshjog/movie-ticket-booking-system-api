@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @RestController
 @AllArgsConstructor
 public class MovieController {
@@ -22,5 +24,11 @@ public class MovieController {
     public ResponseEntity<ResponseStructure<MovieResponse>> fetchMovie(@PathVariable String movieId){
         MovieResponse movieResponse = movieService.fetchMovie(movieId);
         return responseBuilder.success(HttpStatus.OK, "Movie has been successfully fetched", movieResponse);
+    }
+
+    @GetMapping("/movies/search")
+    public ResponseEntity<ResponseStructure<Set<MovieResponse>>> searchMovies(String search){
+        Set<MovieResponse> movieResponses = movieService.searchMovies(search);
+        return responseBuilder.success(HttpStatus.OK, "Movies fetched Successfully", movieResponses);
     }
 }
