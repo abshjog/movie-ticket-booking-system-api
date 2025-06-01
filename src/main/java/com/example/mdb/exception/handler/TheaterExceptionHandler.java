@@ -1,5 +1,6 @@
 package com.example.mdb.exception.handler;
 
+import com.example.mdb.exception.CityNotFoundException;
 import com.example.mdb.exception.TheaterNotFoundByIdException;
 import com.example.mdb.utility.ErrorStructure;
 import com.example.mdb.utility.RestResponseBuilder;
@@ -18,5 +19,10 @@ public class TheaterExceptionHandler {
     @ExceptionHandler(TheaterNotFoundByIdException.class)
     public ResponseEntity<ErrorStructure<String>> handleTheaterNotFoundByIdException(TheaterNotFoundByIdException ex) {
         return responseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "Theater with the requested ID not found");
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorStructure<String>> handleCityNotFoundException(CityNotFoundException ex){
+        return responseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "Entered city not found.");
     }
 }

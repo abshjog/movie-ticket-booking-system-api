@@ -43,7 +43,6 @@ public class JwtService {
             ExtractedToken extractedToken = new ExtractedToken(header, claimsBody);
 
             return extractedToken;
-
         } catch (JwtException e) {
             log.warn("Failed to parse token, returning null..", e);
             return null;

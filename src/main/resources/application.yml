@@ -9,11 +9,17 @@ Spring:
     username: "${MYSQL_USERNAME:root}"
     password: "${MYSQL_PWD:root}"
 
+    hikari:
+      data-source-properties:
+        serverTimezone: UTC
+
   #JPA Details
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
+      jdbc:
+        time_zone: UTC
 
 # Internal Configuration
 app:
@@ -21,3 +27,8 @@ app:
     secret: "${TOKEN_SECRET:6OJTb36NI+zRK83avvt+11tUQGwoHhkA9cC3UM1mxuE=}" #Only for testing and development mode
     access-duration: "${TOKEN_ACCESS_DURATION:5}" #in minutes
     refresh-duration: "${TOKEN_REFRESH_DURATION:1440}" #in minutes 24*60
+
+#Context-path
+server:
+  servlet:
+    context-path: /api/v1

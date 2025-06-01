@@ -9,7 +9,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -31,12 +30,11 @@ public class Seat {
     @JoinColumn(name = "screen_id")
     private Screen screen;
 
-    @Column(name = "is_delete")
-    private boolean isDelete;
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
-
 
     @CreatedDate
     @Column(name = "created_at")

@@ -24,9 +24,11 @@ public class Show {
     @Column(name = "show_id")
     private String showId;
 
+    // @Convert(converter = InstantToLongConverter.class)
     @Column(name = "starts_at")
     private Instant startsAt;
 
+    // @Convert(converter = InstantToLongConverter.class)
     @Column(name = "ends_at")
     private Instant endsAt;
 
@@ -49,4 +51,8 @@ public class Show {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screen_id")
     private Screen screen;
+
+    @ManyToOne
+    @JoinColumn(name = "theater_id")
+    private Theater theater;
 }

@@ -82,7 +82,6 @@ public class AuthFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-
     private boolean isValid(String s) {
         return s != null && !s.isBlank();
     }

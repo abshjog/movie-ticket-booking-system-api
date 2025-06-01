@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface SeatRepository extends JpaRepository<Seat, String> {
 
-    List<Seat> findByScreenAndIsDeleteFalse(Screen screen);
+    List<Seat> findByScreenAndIsDeletedFalse(Screen screen);
 }
