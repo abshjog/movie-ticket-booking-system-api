@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -34,5 +35,15 @@ public class MovieServiceImpl implements MovieService {
             return movieMapper.movieResponseMapper(movie, avgRatings);
         }
         throw new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again.");
+    }
+
+    @Override
+    public Set<MovieResponse> searchMovies(String search) {
+        if(search==null || search.isBlank()){
+            return null;
+        }
+        List<Movie> fetchedMovies = movieRepository.findByTitleContainingIgnoreCase(search);
+
+        return movieMapper.movieResponseMapper(fetchedMovies);
     }
 }
