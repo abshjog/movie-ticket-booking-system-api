@@ -35,7 +35,6 @@ public class AuthServiceImpl implements AuthService {
 
     private final AppEnv env;
 
-
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
 

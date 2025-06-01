@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 // Maps superclass to base table; subclasses in their own tables joined via PK
 @Inheritance(strategy = InheritanceType.JOINED)

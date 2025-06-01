@@ -28,6 +28,7 @@ public class Screen {
     private String screenId;
 
     @Column(name = "screen_type")
+    @Enumerated(EnumType.STRING)
     private ScreenType screenType;
 
     @Column(name = "capacity")

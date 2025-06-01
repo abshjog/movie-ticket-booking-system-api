@@ -70,7 +70,7 @@ public class ScreenServiceImpl implements ScreenService {
         for (int i = 1, j = 1; i <= capacity; i++, j++) {
             Seat seat = new Seat();
             seat.setScreen(screen);
-            seat.setDelete(false);
+            seat.setDeleted(false);
             seat.setName(row + "" + j);
             seatRepository.save(seat);
             seats.add(seat);
