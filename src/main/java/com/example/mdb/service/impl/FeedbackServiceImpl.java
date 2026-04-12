@@ -3,6 +3,7 @@ package com.example.mdb.service.impl;
 import com.example.mdb.dto.FeedbackRequest;
 import com.example.mdb.dto.FeedbackResponse;
 import com.example.mdb.entity.Feedback;
+import com.example.mdb.entity.Movie;
 import com.example.mdb.entity.User;
 import com.example.mdb.exception.MovieNotFoundByIdException;
 import com.example.mdb.mapper.FeedbackMapper;
@@ -24,20 +25,23 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public FeedbackResponse createFeedback(String movieId, FeedbackRequest feedbackRequest, String email) {
-        if(movieRepository.existsById(movieId)){
-            Feedback feedback = copy(feedbackRequest, new Feedback(), movieId, email);
 
-            return feedbackMapper.feedbackResponseMapper(feedback);
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again."));
+
+        User user = (User) userRepository.findByEmail(email);
+
+        if (feedbackRepository.existsByMovieAndUser(movie, user)) {
+            throw new IllegalStateException("You have already reviewed this movie!");
         }
-        throw new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again.");
-    }
 
-    private Feedback copy(FeedbackRequest feedbackRequest, Feedback feedback, String movieId, String email) {
+        Feedback feedback = new Feedback();
         feedback.setRating(feedbackRequest.rating());
         feedback.setReview(feedbackRequest.review());
-        feedback.setMovie(movieRepository.findById(movieId).get());
-        feedback.setUser((User) userRepository.findByEmail(email));
+        feedback.setMovie(movie);
+        feedback.setUser(user);
+
         feedbackRepository.save(feedback);
-        return feedback;
+        return feedbackMapper.feedbackResponseMapper(feedback);
     }
 }

@@ -15,8 +15,8 @@ public class MovieExceptionHandler {
 
     private final RestResponseBuilder responseBuilder;
 
-    @ExceptionHandler
+    @ExceptionHandler(MovieNotFoundByIdException.class)
     public ResponseEntity<ErrorStructure<String>> handleMovieNotFoundByIdException(MovieNotFoundByIdException ex) {
-        return responseBuilder.error(HttpStatus.BAD_REQUEST,  ex.getMessage(), "Movie with the provided ID is not found. Please verify the ID and try again.");
+        return responseBuilder.error(HttpStatus.NOT_FOUND,  ex.getMessage(), "Movie with the provided ID is not found. Please verify the ID and try again.");
     }
 }

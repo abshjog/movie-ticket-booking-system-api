@@ -8,8 +8,13 @@ import com.example.mdb.mapper.MovieMapper;
 import com.example.mdb.repository.MovieRepository;
 import com.example.mdb.service.MovieService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -22,28 +27,37 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieResponse fetchMovie(String movieId) {
-        if (movieRepository.existsById(movieId)){
-            Movie movie = movieRepository.findById(movieId).get();
-            List<Feedback> feedbacks = movie.getFeedbacks();
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new MovieNotFoundByIdException(
+                        "Movie with the provided ID is not found. Please verify the ID and try again."));
 
-            double avgRatings = 0;
+        List<Feedback> feedbacks = movie.getFeedbacks();
+        double avgRatings = 0.0;
 
-            for(Feedback feedback : feedbacks){
-                avgRatings+=feedback.getRating();
+        if (feedbacks != null && !feedbacks.isEmpty()) {
+            double totalScore = 0;
+            for (Feedback feedback : feedbacks) {
+                totalScore += feedback.getRating();
             }
-            avgRatings/= feedbacks.size();
-            return movieMapper.movieResponseMapper(movie, avgRatings);
+            avgRatings = totalScore / feedbacks.size();
         }
-        throw new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again.");
+
+        return movieMapper.movieResponseMapper(movie, avgRatings);
     }
 
     @Override
-    public Set<MovieResponse> searchMovies(String search) {
-        if(search==null || search.isBlank()){
-            return null;
+    public List<MovieResponse> searchMovies(String search, int page, int size) {
+        if (search == null || search.isBlank()) {
+            return Collections.emptyList();
         }
-        List<Movie> fetchedMovies = movieRepository.findByTitleContainingIgnoreCase(search);
 
-        return movieMapper.movieResponseMapper(fetchedMovies);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Movie> moviePage = movieRepository.findByTitleContainingIgnoreCase(search, pageable);
+        List<Movie> fetchedMovies = moviePage.getContent();
+
+        Set<MovieResponse> mappedResponses = movieMapper.movieResponseMapper(fetchedMovies);
+
+        return new ArrayList<>(mappedResponses);
     }
 }

@@ -13,7 +13,6 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
-@ToString
 @EntityListeners(AuditingEntityListener.class)
 public class Seat {
 
@@ -26,8 +25,8 @@ public class Seat {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
     @JoinColumn(name = "screen_id")
+    @JsonIgnore
     private Screen screen;
 
     @Column(name = "is_deleted")

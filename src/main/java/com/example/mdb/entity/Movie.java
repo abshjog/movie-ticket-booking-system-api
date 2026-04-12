@@ -2,6 +2,7 @@ package com.example.mdb.entity;
 
 import com.example.mdb.enums.Certificate;
 import com.example.mdb.enums.Genre;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +16,6 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@ToString
 @EntityListeners(AuditingEntityListener.class)
 public class Movie {
 
@@ -45,8 +45,10 @@ public class Movie {
     private Genre genre;
 
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Show> shows;
 
     @OneToMany(mappedBy = "movie", fetch = FetchType.EAGER)
+    @JsonIgnore
     private List<Feedback> feedbacks;
 }

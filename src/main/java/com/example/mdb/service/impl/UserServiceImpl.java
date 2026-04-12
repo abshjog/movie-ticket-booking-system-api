@@ -13,14 +13,19 @@ import com.example.mdb.repository.UserRepository;
 import com.example.mdb.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
 @AllArgsConstructor
 @Service
 @Slf4j
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -30,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse addUser(UserRegistrationRequest user) {
         if (userRepository.existsByEmail(user.email()))
-            throw new EmailAlreadyExistsException("User with the Email is already exists");
+            throw new EmailAlreadyExistsException("User with the entered Email already exists");
 
         UserDetails userDetails = switch (user.userRole()) {
             case USER -> copy(new User(), user);
@@ -46,7 +51,7 @@ public class UserServiceImpl implements UserService {
             UserDetails user = userRepository.findByEmail(email);
             log.info("user is unique");
             if (! user.getEmail().equals(userRequest.email()) && userRepository.existsByEmail(userRequest.email())){
-                throw new EmailAlreadyExistsException("User with the email already exists");
+                throw new EmailAlreadyExistsException("User with the entered email already exists");
             }
 
             log.info("mapping data...");
@@ -67,6 +72,24 @@ public class UserServiceImpl implements UserService {
             return userMapper.userResponseMapper(user);
         }
         throw new UserNotFoundByEmailException("Email not found in the Database");
+    }
+
+    @Override
+    public Page<UserResponse> findAllUsers(int page, int size) {
+        // 1. Pageable object banao (Konsa page, kitna bada page)
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 2. Repo se Page of Entities uthao
+        Page<UserDetails> usersPage = userRepository.findAll(pageable);
+
+        // 3. Entity ko Response DTO mein map karo (Java 8 streams magic)
+        return usersPage.map(user -> UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .userRole(user.getUserRole().name())
+                .phoneNumber(user.getPhoneNumber())
+                .build());
     }
 
     private UserDetails copy(UserDetails userRole, UserRegistrationRequest user) {
@@ -91,3 +114,9 @@ public class UserServiceImpl implements UserService {
         return userRole;
     }
 }
+
+
+//1. User sends registration data → captured in `UserRegistrationRequest` (DTO)
+//2. Service layer uses `copy()` to map DTO → Entity (`UserDetails`)
+//3. Entity saved in DB.
+//4. When sending response back → Entity converted to `UserResponse` via `UserMapper`

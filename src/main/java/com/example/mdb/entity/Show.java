@@ -1,5 +1,6 @@
 package com.example.mdb.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,6 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
-@ToString
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "movie_show")
 public class Show {
@@ -24,11 +24,9 @@ public class Show {
     @Column(name = "show_id")
     private String showId;
 
-    // @Convert(converter = InstantToLongConverter.class)
     @Column(name = "starts_at")
     private Instant startsAt;
 
-    // @Convert(converter = InstantToLongConverter.class)
     @Column(name = "ends_at")
     private Instant endsAt;
 
@@ -46,13 +44,19 @@ public class Show {
 
     @ManyToOne
     @JoinColumn(name = "movie_id")
+    @JsonIgnore
     private Movie movie;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screen_id")
+    @JsonIgnore
     private Screen screen;
 
     @ManyToOne
     @JoinColumn(name = "theater_id")
+    @JsonIgnore
     private Theater theater;
+
+    @Column(name = "ticket_price")
+    private Double ticketPrice;
 }

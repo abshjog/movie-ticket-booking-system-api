@@ -15,6 +15,8 @@ public class ShowMapper {
                 .showId(show.getShowId())
                 .startsAt(show.getStartsAt())
                 .endsAt(show.getEndsAt())
+                .screenId(show.getScreen().getScreenId())
+                .screenType(show.getScreen().getScreenType())
                 .build();
     }
 }

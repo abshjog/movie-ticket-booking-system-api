@@ -9,9 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Set;
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -27,8 +28,11 @@ public class MovieController {
     }
 
     @GetMapping("/movies/search")
-    public ResponseEntity<ResponseStructure<Set<MovieResponse>>> searchMovies(String search){
-        Set<MovieResponse> movieResponses = movieService.searchMovies(search);
+    public ResponseEntity<ResponseStructure<List<MovieResponse>>> searchMovies(
+            @RequestParam String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<MovieResponse> movieResponses = movieService.searchMovies(search, page, size);
         return responseBuilder.success(HttpStatus.OK, "Movies fetched Successfully", movieResponses);
     }
 }

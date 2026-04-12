@@ -14,7 +14,7 @@ import java.util.List;
 public interface ShowRepository extends JpaRepository<Show, String> {
 
     public interface TheaterId {
-        String getTheater_TheaterId();     // exactly matches the property name
+        String getTheater_TheaterId();
     }
 
     List<Show> findDistinctByStartsAtBetweenAndMovie_MovieIdAndScreen_ScreenType(
