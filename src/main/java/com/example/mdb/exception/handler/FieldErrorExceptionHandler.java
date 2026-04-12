@@ -21,10 +21,8 @@ public class FieldErrorExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
-        // Retrieve all validation errors.
         List<ObjectError> errors = ex.getBindingResult().getAllErrors();
 
-        // Mapping each ObjectError to a CustomFieldError.
         List<CustomFieldError> customFieldErrors = new LinkedList<>();
         for (ObjectError error : errors) {
             if (error instanceof FieldError fieldError) {
@@ -36,7 +34,6 @@ public class FieldErrorExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
 
-        // Build the FieldErrorStructure object using its builder.
         FieldErrorStructure<List<CustomFieldError>> errorResponse =
                 FieldErrorStructure.<List<CustomFieldError>>builder()
                         .statusCode(HttpStatus.BAD_REQUEST.value())
@@ -44,7 +41,6 @@ public class FieldErrorExceptionHandler extends ResponseEntityExceptionHandler {
                         .data(customFieldErrors)
                         .build();
 
-        // Return it via ResponseEntity.
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(errorResponse);

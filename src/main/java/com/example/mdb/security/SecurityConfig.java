@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,14 +37,15 @@ public class SecurityConfig {
     @Order(2)
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/**");
-
-        http.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.POST, "/register", "/login")
-                .permitAll()
-                .anyRequest()
-                .authenticated());
-
-        setDefault(new AuthFilter(jwtService, TokenType.ACCESS), http);
+        http.csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults()) // Added CORS placeholder
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .securityMatcher("/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/register", "/login").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(new AuthFilter(jwtService, TokenType.ACCESS), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -51,13 +53,11 @@ public class SecurityConfig {
     @Order(1)
     @Bean
     SecurityFilterChain refreshFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/refresh/**");
-
-        http.authorizeHttpRequests(auth -> auth
-                .anyRequest()
-                .authenticated());
-
-        setDefault(new AuthFilter(jwtService, TokenType.REFRESH), http);
+        http.csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .securityMatcher("/refresh/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .addFilterBefore(new AuthFilter(jwtService, TokenType.REFRESH), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -65,14 +65,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
-    }
-
-
-    private HttpSecurity setDefault(AuthFilter authFilter, HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable);
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http;
     }
 }

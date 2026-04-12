@@ -1,18 +1,14 @@
 package com.example.mdb.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record FeedbackRequest(
 
-        @NotNull
-        @Min(1)
-        @Max(10)
+        @Min(value = 1, message = "Rating must be at least 1.")
+        @Max(value = 10, message = "Rating cannot exceed 10.")
         int rating,
 
-        @NotNull
-        @Size(min = 5, max = 100, message = "Please provide a proper review")
+        @NotBlank(message = "Review cannot be blank.")
+        @Size(min = 5, max = 100, message = "Review must be between 5 and 100 characters.")
         String review
 ) {}

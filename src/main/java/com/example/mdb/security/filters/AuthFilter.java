@@ -5,7 +5,9 @@ import com.example.mdb.security.jwt.AuthenticatedTokenDetails;
 import com.example.mdb.security.jwt.ExtractedToken;
 import com.example.mdb.security.jwt.JwtService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,54 +36,64 @@ public class AuthFilter extends OncePerRequestFilter {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (isValid(header)) {
-            log.debug("Authenticating request...");
             String token = header.contains("Bearer ") ? header.substring(7) : header;
 
-            var extractedToken = jwtService.parseToken(token);
-            Claims claims = Optional.ofNullable(extractedToken)
-                    .map(ExtractedToken::claims)
-                    .orElse(null);
+            try {
+                var extractedToken = jwtService.parseToken(token);
+                if (extractedToken == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-            JwsHeader headers = Optional.ofNullable(extractedToken)
-                    .map(ExtractedToken::headers)
-                    .orElse(null);
+                Claims claims = extractedToken.claims();
+                JwsHeader headers = extractedToken.headers();
 
-            boolean correctType = Optional.ofNullable(headers)
-                    .map(h -> (String) h.get("type"))
-                    .map(String::toUpperCase)
-                    .map(TokenType::valueOf)
-                    .map(t -> {
-                        var result = t.equals(tokenType);
-                        log.debug("The token is of type: {}, validation result: {}", t.name(), result);
-                        return result;
-                    })
-                    .orElse(false);
+                boolean correctType = Optional.ofNullable(headers)
+                        .map(h -> (String) h.get("type"))
+                        .map(String::toUpperCase)
+                        .map(TokenType::valueOf)
+                        .map(t -> t.equals(tokenType))
+                        .orElse(false);
 
-            if (!correctType || claims == null) filterChain.doFilter(request, response);
+                if (!correctType || claims == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-            String role = claims.get("role", String.class);
-            String email = claims.getSubject();
-            log.debug("Token found, extracted claims, email/username; {}, role: {}", email, role);
+                String role = claims.get("role", String.class);
+                String email = claims.getSubject();
 
-            if (isValid(role) && isValid(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var authorities = List.of(new SimpleGrantedAuthority(role));
-                var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
-                authToken.setDetails(request);
+                if (isValid(role) && isValid(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    var authorities = List.of(new SimpleGrantedAuthority(role));
+                    var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
+                    authToken.setDetails(request);
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                log.info("User '{}' - authenticated.", email);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                AuthenticatedTokenDetails tokenDetails = new AuthenticatedTokenDetails(
-                        email,
-                        role,
-                        claims.getExpiration().toInstant(),
-                        token);
+                    AuthenticatedTokenDetails tokenDetails = new AuthenticatedTokenDetails(
+                            email, role, claims.getExpiration().toInstant(), token);
 
-                request.setAttribute("tokenDetails", tokenDetails);
+                    request.setAttribute("tokenDetails", tokenDetails);
+                }
+            } catch (ExpiredJwtException e) {
+                log.error("JWT Expired: {}", e.getMessage());
+                sendErrorResponse(response, "Token has expired. Please login again.");
+                return;
+            } catch (JwtException e) {
+                log.error("JWT Invalid: {}", e.getMessage());
+                sendErrorResponse(response, "Invalid Token. Access Denied.");
+                return;
             }
         }
         filterChain.doFilter(request, response);
     }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
+    }
+
     private boolean isValid(String s) {
         return s != null && !s.isBlank();
     }

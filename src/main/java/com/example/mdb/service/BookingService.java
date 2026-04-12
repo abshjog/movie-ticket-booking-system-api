@@ -1,0 +1,13 @@
+package com.example.mdb.service;
+
+import com.example.mdb.dto.BookingRequest;
+import com.example.mdb.dto.BookingResponse;
+
+public interface BookingService {
+
+    BookingResponse createBooking(BookingRequest bookingRequest, String showId, String email);
+
+    BookingResponse confirmBooking(String bookingId);
+
+    void expireOldBookings();
+}

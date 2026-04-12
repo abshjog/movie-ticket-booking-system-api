@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,8 +19,10 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Setter
-@ToString
+@SQLDelete(sql = "UPDATE user_details SET is_deleted = true WHERE user_id = ?")
+@Where(clause = "is_deleted = false")
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "user_details")
 public class UserDetails {
 
         @Id
@@ -45,8 +49,9 @@ public class UserDetails {
         @Column(name = "dob")
         private LocalDate dateOfBirth;
 
-        @Column(name = "is_deleted")
-        private boolean isDeleted;
+//        @Column(name = "is_deleted")
+//        private boolean isDeleted;
+        private boolean isDeleted = false;
 
         @Column(name = "deleted_at")
         private Instant deletedAt;

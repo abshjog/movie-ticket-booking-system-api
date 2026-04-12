@@ -18,6 +18,7 @@ public class ScreenMapper {
 
         return ScreenResponse.builder()
                 .screenId(screen.getScreenId())
+                .screenName(screen.getName())
                 .screenType(screen.getScreenType())
                 .capacity(screen.getCapacity())
                 .noOfRows(screen.getNoOfRows())
@@ -26,9 +27,10 @@ public class ScreenMapper {
     }
 
     private List<SeatResponse> seatResponseMapper(List<Seat> seats) {
+        if (seats == null) return new LinkedList<>();
+
         List<SeatResponse> seatList = new LinkedList<>();
         for (Seat seat : seats) {
-
             seatList.add(SeatResponse.builder()
                     .seatId(seat.getSeatId())
                     .name(seat.getName())

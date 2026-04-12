@@ -9,7 +9,6 @@ import java.util.Set;
 
 @Builder
 public record MovieResponse(
-
         String movieId,
         String title,
         String description,
@@ -17,5 +16,6 @@ public record MovieResponse(
         Duration runtime,
         Certificate certificate,
         Genre genre,
-        Set<String> castList
+        Set<String> castList,
+        int ratingCount
 ) {}

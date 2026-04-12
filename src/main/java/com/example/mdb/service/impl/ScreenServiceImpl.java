@@ -30,35 +30,37 @@ public class ScreenServiceImpl implements ScreenService {
 
     @Override
     public ScreenResponse addScreen(ScreenRequest screenRequest, String theaterId) {
-
-        if (theaterRepository.existsById(theaterId)) {
-            Theater theater = theaterRepository.findById(theaterId).get();
-            Screen screen = copy(screenRequest, new Screen(), theater);
-            return screenMapper.screenResponseMapper(screen);
-        }
-        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
+        return theaterRepository.findById(theaterId)
+                .map(theater -> {
+                    Screen screen = copy(screenRequest, new Screen(), theater);
+                    return screenMapper.screenResponseMapper(screen);
+                })
+                .orElseThrow(() -> new TheaterNotFoundByIdException("Theater not found by the provided ID"));
     }
 
     @Override
     public ScreenResponse findScreen(String theaterId, String screenId) {
         if (theaterRepository.existsById(theaterId)) {
-            if (screenRepository.existsById(screenId)) {
-                return screenMapper.screenResponseMapper(screenRepository.findById(screenId).get());
-            }
-            throw new ScreenNotFoundByIdException("Screen not found by the provided ID");
+            return screenRepository.findById(screenId)
+                    .map(screenMapper::screenResponseMapper)
+                    .orElseThrow(() -> new ScreenNotFoundByIdException("Screen not found by the provided ID"));
         }
         throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
     }
 
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
+        screen.setName(screenRequest.screenName());
         screen.setScreenType(screenRequest.screenType());
         screen.setCapacity(screenRequest.capacity());
+
         if (screenRequest.noOfRows() > screenRequest.capacity()) {
             throw new RowLimitExceededException("Number of rows exceeds the capacity");
         }
+
         screen.setNoOfRows(screenRequest.noOfRows());
         screen.setTheater(theater);
         screenRepository.save(screen);
+
         screen.setSeats(createSeats(screen, screenRequest.capacity()));
         return screen;
     }

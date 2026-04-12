@@ -9,6 +9,7 @@ import java.util.List;
 public record ScreenResponse(
 
         String screenId,
+        String screenName,
         ScreenType screenType,
         Integer capacity,
         Integer noOfRows,

@@ -17,5 +17,3 @@ public class AuditorAwareImpl implements AuditorAware<String> {
         return Optional.of(username);
     }
 }
-
-// Name of Bean : auditorAwareImpl

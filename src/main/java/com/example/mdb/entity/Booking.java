@@ -1,5 +1,6 @@
 package com.example.mdb.entity;
 
+import com.example.mdb.enums.BookingStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,32 +18,37 @@ import java.util.List;
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
-public class Theater {
+public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "theater_id")
-    private String theaterId;
+    @Column(name = "booking_id")
+    private String bookingId;
 
-    @Column(name = "name")
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "booking_status", length = 20) //
+    private BookingStatus bookingStatus;
 
-    @Column(name = "address")
-    private String address;
+    @Column(name = "total_amount", nullable = false)
+    private Double totalAmount;
 
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "landmark")
-    private String landmark;
-
-    @OneToMany(mappedBy = "theater")
+    @ManyToOne
+    @JoinColumn(name = "user_id")
     @JsonIgnore
-    private List<Screen> screens;
+    private User user;
 
-    @OneToMany(mappedBy = "theater")
+    @ManyToOne
+    @JoinColumn(name = "show_id")
     @JsonIgnore
-    private List<Show> shows;
+    private Show show;
+
+    @ManyToMany
+    @JoinTable(
+            name = "booking_seats",
+            joinColumns = @JoinColumn(name = "booking_id"),
+            inverseJoinColumns = @JoinColumn(name = "seat_id"))
+    @JsonIgnore
+    private List<Seat> seats;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -53,10 +59,6 @@ public class Theater {
     private Instant updatedAt;
 
     @CreatedBy
+    @Column(name = "created_by")
     private String createdBy;
-
-    @ManyToOne
-    @JoinColumn(name = "theater_owner_id")
-    @JsonIgnore
-    private TheaterOwner theaterOwner;
 }

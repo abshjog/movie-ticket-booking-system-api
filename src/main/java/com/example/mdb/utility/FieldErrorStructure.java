@@ -10,7 +10,6 @@ public class FieldErrorStructure<T> {
 
     private int statusCode;
 
-    //@JsonProperty(namespace = "error_message")
     @JsonProperty("error_message")
     private String errorMessage;
 

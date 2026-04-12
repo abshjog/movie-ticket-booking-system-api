@@ -1,13 +1,7 @@
 package com.example.mdb.exception;
 
-import lombok.Getter;
-
-@Getter
-public class MovieNotFoundByIdException extends RuntimeException{
-
-    private String message;
-
+public class MovieNotFoundByIdException extends RuntimeException {
     public MovieNotFoundByIdException(String message) {
-        this.message = message;
+        super(message);
     }
 }

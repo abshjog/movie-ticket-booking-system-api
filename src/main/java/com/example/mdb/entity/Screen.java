@@ -18,7 +18,6 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@ToString
 @EntityListeners(AuditingEntityListener.class)
 public class Screen {
 
@@ -26,6 +25,9 @@ public class Screen {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "screen_id")
     private String screenId;
+
+    @Column(name = "name")
+    private String name;
 
     @Column(name = "screen_type")
     @Enumerated(EnumType.STRING)
@@ -51,6 +53,7 @@ public class Screen {
 
     @ManyToOne
     @JoinColumn(name = "theater_id")
+    @JsonIgnore
     private Theater theater;
 
     @OneToMany(mappedBy = "screen", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
