@@ -17,12 +17,13 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @Validated
+@RequestMapping("/shows")
 public class ShowController {
 
     private final ShowService showService;
     private final RestResponseBuilder responseBuilder;
 
-    @PostMapping("theaters/{theaterId}/screens/{screenId}/shows")
+    @PostMapping("/theaters/{theaterId}/screens/{screenId}")
     @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<ShowResponse>> addShow(
             @PathVariable String theaterId,
@@ -34,7 +35,7 @@ public class ShowController {
         return responseBuilder.success(HttpStatus.OK, "Show successfully created", showResponse);
     }
 
-    @GetMapping("movies/{movieId}/shows")
+    @GetMapping("/movies/{movieId}")
     public ResponseEntity<ResponseStructure<Page<TheaterShowProjection>>> fetchShows(
             @PathVariable String movieId,
             @ModelAttribute MovieShowsRequest showsRequest,
@@ -43,7 +44,7 @@ public class ShowController {
         return responseBuilder.success(HttpStatus.OK, "Fetched Successfully", shows);
     }
 
-    @GetMapping("shows/{showId}/seats")
+    @GetMapping("/{showId}/seats")
     public ResponseEntity<ResponseStructure<List<SeatStatusResponse>>> getSeatAvailability(@PathVariable String showId) {
         return responseBuilder.success(
                 HttpStatus.OK,

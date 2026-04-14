@@ -15,26 +15,28 @@ import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
+@RequestMapping("/theaters")
 public class TheaterController {
 
     private final TheaterService theaterService;
     private final RestResponseBuilder responseBuilder;
 
-    @PostMapping("/theaters")
+    @PostMapping
     @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<TheaterResponse>> addTheater(Authentication auth, @Valid @RequestBody TheaterRequest theaterRequest){
         String email = auth.getName();
         TheaterResponse theaterResponse = theaterService.addTheater(email, theaterRequest);
-        return responseBuilder.success(HttpStatus.OK, "Theater created successfully", theaterResponse);
+        return responseBuilder.success(HttpStatus.CREATED, "Theater created successfully", theaterResponse);
     }
 
-    @GetMapping("theaters/{theaterId}")
+    @GetMapping("/{theaterId}")
     public ResponseEntity<ResponseStructure<TheaterResponse>> findTheater(@PathVariable String theaterId){
         TheaterResponse theaterResponse = theaterService.findTheater(theaterId);
         return responseBuilder.success(HttpStatus.OK, "Theater fetched successfully", theaterResponse);
     }
 
-    @PutMapping("/theaters/{theaterId}")
+    @PutMapping("/{theaterId}")
+    @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<TheaterResponse>> updateTheater(@PathVariable String theaterId, @Valid @RequestBody TheaterRequest theaterRequest){
         TheaterResponse theaterResponse = theaterService.updateTheater(theaterId, theaterRequest);
         return responseBuilder.success(HttpStatus.OK, "Theater updated successfully", theaterResponse);

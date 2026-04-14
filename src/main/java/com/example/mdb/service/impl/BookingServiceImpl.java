@@ -6,6 +6,7 @@ import com.example.mdb.entity.*;
 import com.example.mdb.enums.BookingStatus;
 import com.example.mdb.exception.BookingNotAllowedException;
 import com.example.mdb.exception.SeatAlreadyBookedException;
+import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.repository.*;
 import com.example.mdb.service.BookingService;
 import jakarta.transaction.Transactional;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.example.mdb.mapper.BookingMapper;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -30,21 +32,25 @@ public class BookingServiceImpl implements BookingService {
     private final ShowSeatRepository showSeatRepository;
     private final BookingMapper bookingMapper;
 
-    @Override
-    @Transactional
-    public BookingResponse createBooking(BookingRequest bookingRequest, String showId, String email) {
+    private static final int BOOKING_BUFFER_MINUTES = 5;
 
-        UserDetails userDetails = userRepository.findByEmail(email);
-        if (userDetails == null) {
-            throw new RuntimeException("User not found with email: " + email);
-        }
+    public BookingResponse createBooking(BookingRequest bookingRequest, String email) {
+
+        UserDetails userDetails = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
         User user = (User) userDetails;
 
+        String showId = bookingRequest.showId();
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new RuntimeException("Show not found with ID: " + showId));
 
-        if (show.getStartsAt().isBefore(Instant.now())) {
-            throw new BookingNotAllowedException("Booking denied: Show already started or passed.");
+
+        Instant bookingDeadline = show.getStartsAt().minus(BOOKING_BUFFER_MINUTES, ChronoUnit.MINUTES);
+
+        if (Instant.now().isAfter(bookingDeadline)) {
+            throw new BookingNotAllowedException("Booking Closed: Online bookings are only allowed up to "
+                    + BOOKING_BUFFER_MINUTES + " minutes before the show starts.");
         }
 
         List<ShowSeat> selectedShowSeats = showSeatRepository.findByShowShowIdAndSeatSeatIdIn(showId, bookingRequest.seatIds());
@@ -123,5 +129,43 @@ public class BookingServiceImpl implements BookingService {
             showSeatRepository.saveAll(showSeatsToRelease);
         });
         bookingRepository.saveAll(expiredBookings);
+    }
+
+    @Override
+    @Transactional
+    public BookingResponse cancelBooking(String bookingId, String email) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found!"));
+
+        if (!booking.getUser().getEmail().equals(email)) {
+            throw new BookingNotAllowedException("Security Alert: You can only cancel your own bookings!");
+        }
+
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingNotAllowedException("Cancellation failed: Only confirmed bookings can be cancelled.");
+        }
+
+        Show show = booking.getShow();
+        long minutesToStart = Duration.between(Instant.now(), show.getStartsAt()).toMinutes();
+
+        if (minutesToStart < 60) {
+            throw new BookingNotAllowedException("Too Late! Cancellation is only allowed up to 60 minutes before the show starts.");
+        }
+
+        List<String> seatIds = booking.getSeats().stream()
+                .map(Seat::getSeatId)
+                .toList();
+
+        List<ShowSeat> bookedSeats = showSeatRepository.findByShowShowIdAndSeatSeatIdIn(show.getShowId(), seatIds);
+
+        bookedSeats.forEach(ss -> ss.setBooked(false));
+        showSeatRepository.saveAll(bookedSeats);
+
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        Booking cancelledBooking = bookingRepository.save(booking);
+
+        log.info("Booking Cancelled: ID {} by User {}", bookingId, email);
+
+        return bookingMapper.mapToResponse(cancelledBooking);
     }
 }

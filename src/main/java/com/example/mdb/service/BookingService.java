@@ -5,9 +5,11 @@ import com.example.mdb.dto.BookingResponse;
 
 public interface BookingService {
 
-    BookingResponse createBooking(BookingRequest bookingRequest, String showId, String email);
+    BookingResponse createBooking(BookingRequest bookingRequest, String email);
 
     BookingResponse confirmBooking(String bookingId);
 
     void expireOldBookings();
+
+    BookingResponse cancelBooking(String bookingId, String email);
 }

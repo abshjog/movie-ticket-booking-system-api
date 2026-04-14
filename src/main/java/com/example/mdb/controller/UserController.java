@@ -16,41 +16,38 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
+@RequestMapping("/users")
 @RestController
 public class UserController {
 
     private final UserService userService;
     private final RestResponseBuilder restResponseBuilder;
 
-    @PostMapping("/register")
-    public ResponseEntity<ResponseStructure<UserResponse>> addUser(@RequestBody @Valid UserRegistrationRequest user){
-        UserResponse userDetails = userService.addUser(user);
-        return restResponseBuilder.success(HttpStatus.CREATED,"New User account has been successfully created", userDetails);
-    }
-
-    @GetMapping("/users")
+    @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ResponseStructure<Page<UserResponse>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
         Page<UserResponse> users = userService.findAllUsers(page, size);
         return restResponseBuilder.success(HttpStatus.OK, "Users fetched successfully", users);
     }
 
-    @PutMapping("/users/me")
+    @PutMapping("/{userId}")
     @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
-    public ResponseEntity<ResponseStructure<UserResponse>> updateUser(Authentication auth, @RequestBody @Valid UserUpdationRequest user){
-        String email = auth.getName();
-        UserResponse userDetails = userService.updateUser(user, email);
-        return restResponseBuilder.success(HttpStatus.OK,"User Details have been updated successfully", userDetails);
+    public ResponseEntity<ResponseStructure<UserResponse>> updateUser(
+            @PathVariable String userId,
+            @RequestBody @Valid UserUpdationRequest user,
+            Authentication auth) {
+        UserResponse userDetails = userService.updateUser(userId, user, auth.getName());
+        return restResponseBuilder.success(HttpStatus.OK, "User Details updated successfully", userDetails);
     }
 
-    @DeleteMapping("/users/me")
+    @DeleteMapping("/{userId}")
     @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
-    public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(Authentication auth){
-        String email = auth.getName();
-        UserResponse userDetails = userService.softDeleteUser(email);
-        return restResponseBuilder.success(HttpStatus.OK,"User account has been successfully deleted", userDetails);
+    public ResponseEntity<ResponseStructure<UserResponse>> softDeleteUser(
+            @PathVariable String userId,
+            Authentication auth){
+        UserResponse userDetails = userService.softDeleteUser(userId, auth.getName());
+        return restResponseBuilder.success(HttpStatus.OK, "User account successfully deleted", userDetails);
     }
 }

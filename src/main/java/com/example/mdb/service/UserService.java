@@ -10,9 +10,9 @@ public interface UserService {
 
     UserResponse addUser(@Valid UserRegistrationRequest user);
 
-    UserResponse updateUser(@Valid UserUpdationRequest user, String email);
-
-    UserResponse softDeleteUser(String email);
-
     Page<UserResponse> findAllUsers(int page, int size);
+
+    UserResponse updateUser(String userId, @Valid UserUpdationRequest user, String authenticatedEmail);
+
+    UserResponse softDeleteUser(String userId, String authenticatedEmail);
 }

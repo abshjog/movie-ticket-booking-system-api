@@ -3,7 +3,7 @@ package com.example.mdb.service.impl;
 import com.example.mdb.dto.MovieResponse;
 import com.example.mdb.entity.Feedback;
 import com.example.mdb.entity.Movie;
-import com.example.mdb.exception.MovieNotFoundByIdException;
+import com.example.mdb.exception.MovieNotFoundException;
 import com.example.mdb.mapper.MovieMapper;
 import com.example.mdb.repository.MovieRepository;
 import com.example.mdb.service.MovieService;
@@ -27,37 +27,27 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieResponse fetchMovie(String movieId) {
+        // Step 1: Fetch with Optional handling
         Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new MovieNotFoundByIdException(
-                        "Movie with the provided ID is not found. Please verify the ID and try again."));
+                .orElseThrow(() -> new MovieNotFoundException("Movie not found with ID: " + movieId));
 
+        // Step 2: Calculate Average Rating
         List<Feedback> feedbacks = movie.getFeedbacks();
-        double avgRatings = 0.0;
-
-        if (feedbacks != null && !feedbacks.isEmpty()) {
-            double totalScore = 0;
-            for (Feedback feedback : feedbacks) {
-                totalScore += feedback.getRating();
-            }
-            avgRatings = totalScore / feedbacks.size();
-        }
+        double avgRatings = (feedbacks != null && !feedbacks.isEmpty())
+                ? feedbacks.stream().mapToDouble(Feedback::getRating).average().orElse(0.0)
+                : 0.0;
 
         return movieMapper.movieResponseMapper(movie, avgRatings);
     }
 
     @Override
     public List<MovieResponse> searchMovies(String search, int page, int size) {
-        if (search == null || search.isBlank()) {
-            return Collections.emptyList();
-        }
+        if (search == null || search.isBlank()) return Collections.emptyList();
 
         Pageable pageable = PageRequest.of(page, size);
-
         Page<Movie> moviePage = movieRepository.findByTitleContainingIgnoreCase(search, pageable);
-        List<Movie> fetchedMovies = moviePage.getContent();
 
-        Set<MovieResponse> mappedResponses = movieMapper.movieResponseMapper(fetchedMovies);
-
-        return new ArrayList<>(mappedResponses);
+        // Converting Set to List for API consistency
+        return new ArrayList<>(movieMapper.movieResponseMapper(moviePage.getContent()));
     }
 }

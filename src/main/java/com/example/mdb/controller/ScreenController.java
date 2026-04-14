@@ -14,12 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/theaters/{theaterId}/screens")
 public class ScreenController {
 
     private final ScreenService screenService;
     private final RestResponseBuilder responseBuilder;
 
-    @PostMapping("theaters/{theaterId}/screens")
+    @PostMapping
     @PreAuthorize("hasAuthority('THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<ScreenResponse>> addScreen(
             @Valid @RequestBody ScreenRequest screenRequest,
@@ -28,7 +29,7 @@ public class ScreenController {
         return responseBuilder.success(HttpStatus.OK, "Screen has been successfully created", screenResponse);
     }
 
-    @GetMapping("theaters/{theaterId}/screens/{screenId}")
+    @GetMapping("/{screenId}")
     public ResponseEntity<ResponseStructure<ScreenResponse>> findScreen(
             @PathVariable String theaterId,
             @PathVariable String screenId) {

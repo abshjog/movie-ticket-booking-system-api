@@ -5,6 +5,7 @@ import com.example.mdb.dto.LoginRequest;
 import com.example.mdb.dto.auth.AuthResponse;
 import com.example.mdb.entity.UserDetails;
 import com.example.mdb.enums.auth.TokenType;
+import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.mapper.auth.AuthMapper;
 import com.example.mdb.repository.UserRepository;
 import com.example.mdb.security.SecurityConfig;
@@ -35,38 +36,38 @@ public class AuthServiceImpl implements AuthService {
 
     private final AppEnv env;
 
-    @Override
     public AuthResponse login(LoginRequest loginRequest) {
-
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password());
-
         Authentication authentication = authenticationManager.authenticate(token);
 
-        if (! authentication.isAuthenticated())
+        if (!authentication.isAuthenticated())
             throw new UsernameNotFoundException("Invalid Login Details");
 
-        com.example.mdb.entity.UserDetails userDetails = userRepository.findByEmail(authentication.getName());
+        // FIX: Added .orElseThrow()
+        UserDetails userDetails = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + authentication.getName()));
 
-        TokenPayLoad access = tokenGenerator(userDetails, env.getToken().getAccessDuration() , TokenType.ACCESS);
-        TokenPayLoad refresh = tokenGenerator(userDetails, env.getToken().getRefreshDuration(), TokenType.REFRESH );
+        TokenPayLoad access = tokenGenerator(userDetails, env.getToken().getAccessDuration(), TokenType.ACCESS);
+        TokenPayLoad refresh = tokenGenerator(userDetails, env.getToken().getRefreshDuration(), TokenType.REFRESH);
 
         String accessToken = jwtService.createJwtToken(access);
         String refreshToken = jwtService.createJwtToken(refresh);
 
-        return authMapper.authResponseMapper(userDetails,access, refresh, accessToken, refreshToken);
+        return authMapper.authResponseMapper(userDetails, access, refresh, accessToken, refreshToken);
     }
 
     @Override
     public AuthResponse refresh(AuthenticatedTokenDetails tokenDetails) {
+        // FIX: Using tokenDetails.email() and added .orElseThrow()
+        UserDetails user = userRepository.findByEmail(tokenDetails.email())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + tokenDetails.email()));
 
-        UserDetails userDetails = userRepository.findByEmail(tokenDetails.email());
-
-        TokenPayLoad access = tokenGenerator(userDetails, env.getToken().getAccessDuration(), TokenType.ACCESS);
+        TokenPayLoad access = tokenGenerator(user, env.getToken().getAccessDuration(), TokenType.ACCESS);
         String accessToken = jwtService.createJwtToken(access);
 
         return new AuthResponse(
-                userDetails.getUserId(),
-                userDetails.getUsername(),
+                user.getUserId(),
+                user.getUsername(),
                 tokenDetails.email(),
                 tokenDetails.role(),
                 access.expiration().toEpochMilli(),

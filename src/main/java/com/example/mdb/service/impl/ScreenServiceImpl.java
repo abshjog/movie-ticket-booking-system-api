@@ -6,8 +6,8 @@ import com.example.mdb.entity.Screen;
 import com.example.mdb.entity.Seat;
 import com.example.mdb.entity.Theater;
 import com.example.mdb.exception.RowLimitExceededException;
-import com.example.mdb.exception.ScreenNotFoundByIdException;
-import com.example.mdb.exception.TheaterNotFoundByIdException;
+import com.example.mdb.exception.ScreenNotFoundException;
+import com.example.mdb.exception.TheaterNotFoundException;
 import com.example.mdb.mapper.ScreenMapper;
 import com.example.mdb.repository.ScreenRepository;
 import com.example.mdb.repository.SeatRepository;
@@ -30,55 +30,51 @@ public class ScreenServiceImpl implements ScreenService {
 
     @Override
     public ScreenResponse addScreen(ScreenRequest screenRequest, String theaterId) {
-        return theaterRepository.findById(theaterId)
-                .map(theater -> {
-                    Screen screen = copy(screenRequest, new Screen(), theater);
-                    return screenMapper.screenResponseMapper(screen);
-                })
-                .orElseThrow(() -> new TheaterNotFoundByIdException("Theater not found by the provided ID"));
+        Theater theater = theaterRepository.findById(theaterId)
+                .orElseThrow(() -> new TheaterNotFoundException("Theater not found with ID: " + theaterId));
+
+        Screen screen = copy(screenRequest, new Screen(), theater);
+        return screenMapper.screenResponseMapper(screen);
     }
 
     @Override
     public ScreenResponse findScreen(String theaterId, String screenId) {
-        if (theaterRepository.existsById(theaterId)) {
-            return screenRepository.findById(screenId)
-                    .map(screenMapper::screenResponseMapper)
-                    .orElseThrow(() -> new ScreenNotFoundByIdException("Screen not found by the provided ID"));
-        }
-        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
+        // Standard lookup: check if theater exists AND screen belongs to it (Optional way)
+        return screenRepository.findById(screenId)
+                .filter(screen -> screen.getTheater().getTheaterId().equals(theaterId))
+                .map(screenMapper::screenResponseMapper)
+                .orElseThrow(() -> new ScreenNotFoundException("Screen not found or doesn't belong to this theater"));
     }
 
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
+        if (screenRequest.noOfRows() > screenRequest.capacity()) {
+            throw new RowLimitExceededException("Rows cannot be more than total capacity!");
+        }
         screen.setName(screenRequest.screenName());
         screen.setScreenType(screenRequest.screenType());
         screen.setCapacity(screenRequest.capacity());
-
-        if (screenRequest.noOfRows() > screenRequest.capacity()) {
-            throw new RowLimitExceededException("Number of rows exceeds the capacity");
-        }
-
         screen.setNoOfRows(screenRequest.noOfRows());
         screen.setTheater(theater);
-        screenRepository.save(screen);
 
-        screen.setSeats(createSeats(screen, screenRequest.capacity()));
-        return screen;
+        Screen savedScreen = screenRepository.save(screen);
+        savedScreen.setSeats(createSeats(savedScreen, screenRequest.capacity()));
+        return savedScreen;
     }
 
     private List<Seat> createSeats(Screen screen, Integer capacity) {
         List<Seat> seats = new LinkedList<>();
-        int noOfSeatsPerRow = screen.getCapacity() / screen.getNoOfRows();
-        char row = 'A';
-        for (int i = 1, j = 1; i <= capacity; i++, j++) {
+        int seatsPerRow = screen.getCapacity() / screen.getNoOfRows();
+        char rowLabel = 'A';
+        for (int i = 1, seatInRow = 1; i <= capacity; i++, seatInRow++) {
             Seat seat = new Seat();
             seat.setScreen(screen);
+            seat.setName(rowLabel + "" + seatInRow);
             seat.setDeleted(false);
-            seat.setName(row + "" + j);
-            seatRepository.save(seat);
-            seats.add(seat);
-            if (j == noOfSeatsPerRow) {
-                j = 0;
-                row++;
+            seats.add(seatRepository.save(seat));
+
+            if (seatInRow == seatsPerRow) {
+                seatInRow = 0;
+                rowLabel++;
             }
         }
         return seats;
