@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record BookingRequest(
+        @NotBlank(message = "Movie ID cannot be blank")
+        String movieId,
+
         @NotBlank(message = "Show ID cannot be blank")
         String showId,
 

@@ -17,6 +17,9 @@ import java.util.List;
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "theaters", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"name", "address", "city"})
+})
 public class Theater {
 
     @Id

@@ -19,7 +19,6 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
 
     List<Booking> findAllByBookingStatusAndCreatedAtBefore(BookingStatus status, Instant instant);
 
-    // 3. Optional Utility: Ek show ki saari booked seat IDs nikalne ke liye
     @Query("SELECT s.seatId FROM Booking b JOIN b.seats s " +
             "WHERE b.show.showId = :showId " +
             "AND b.bookingStatus IN (com.example.mdb.enums.BookingStatus.CONFIRMED, com.example.mdb.enums.BookingStatus.PENDING)")

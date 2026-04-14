@@ -8,7 +8,6 @@ import com.example.mdb.mapper.TheaterMapper;
 import com.example.mdb.repository.*;
 import com.example.mdb.service.ShowService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,56 +37,47 @@ public class ShowServiceImpl implements ShowService {
     @Override
     @Transactional
     public ShowResponse addShow(String theaterId, String screenId, ShowRequest showRequest) {
-
         Theater theater = theaterRepository.findById(theaterId)
-                .orElseThrow(() -> new TheaterNotFoundByIdException("Theater Id not found"));
-
+                .orElseThrow(() -> new TheaterNotFoundException("Theater not found"));
         Screen screen = screenRepository.findById(screenId)
-                .orElseThrow(() -> new ScreenNotFoundByIdException("Screen Id not found"));
-
+                .orElseThrow(() -> new ScreenNotFoundException("Screen not found"));
         Movie movie = movieRepository.findById(showRequest.movieId())
-                .orElseThrow(() -> new MovieNotFoundByIdException("Movie Id not found"));
+                .orElseThrow(() -> new MovieNotFoundException("Movie not found"));
 
-        Instant instantStartTime = Instant.ofEpochMilli(showRequest.startTime());
+        Instant start = Instant.ofEpochMilli(showRequest.startTime());
+        if (start.isBefore(Instant.now())) throw new InvalidShowTimeException("Cannot schedule shows in the past!");
 
-        if (instantStartTime.isBefore(Instant.now())) {
-            throw new InvalidShowTimeException("Show creation failed: Cannot schedule a show for a past date and time.");
-        }
+        Instant end = start.plus(movie.getRuntime());
 
-        Instant movieCompletionTime = instantStartTime.plus(movie.getRuntime());
-
-        boolean hasOverlap = screen.getShows().stream().anyMatch(s ->
-                !(movieCompletionTime.isBefore(s.getStartsAt()) || instantStartTime.isAfter(s.getEndsAt()))
+        // Overlap Check Logic
+        boolean overlap = screen.getShows().stream().anyMatch(s ->
+                !(end.isBefore(s.getStartsAt()) || start.isAfter(s.getEndsAt()))
         );
-
-        if (hasOverlap) {
-            throw new ScreeningOverlapException("Another show is already booked in this time slot");
-        }
+        if (overlap) throw new ScreeningOverlapException("Time slot conflict on this screen!");
 
         Show show = new Show();
         show.setScreen(screen);
         show.setMovie(movie);
-        show.setStartsAt(instantStartTime);
-        show.setEndsAt(movieCompletionTime);
+        show.setStartsAt(start);
+        show.setEndsAt(end);
         show.setTheater(theater);
-
         show.setTicketPrice(showRequest.ticketPrice());
 
         Show savedShow = showRepository.save(show);
 
-        List<Seat> physicalSeats = screen.getSeats();
-        List<ShowSeat> showSeats = physicalSeats.stream().map(seat -> {
-            ShowSeat showSeat = new ShowSeat();
-            showSeat.setShow(savedShow);
-            showSeat.setSeat(seat);
-            showSeat.setBooked(false);
-            return showSeat;
+        // Standard: Generating ShowSeats from Physical Seats
+        List<ShowSeat> showSeats = screen.getSeats().stream().map(seat -> {
+            ShowSeat ss = new ShowSeat();
+            ss.setShow(savedShow);
+            ss.setSeat(seat);
+            ss.setBooked(false);
+            return ss;
         }).toList();
-
         showSeatRepository.saveAll(showSeats);
 
         return showMapper.showResponseMapper(savedShow);
     }
+
 
     @Override
     public Page<TheaterShowProjection> fetchShows(String movieId, MovieShowsRequest showsRequest, String city) {
@@ -146,17 +136,14 @@ public class ShowServiceImpl implements ShowService {
 
     @Override
     public List<SeatStatusResponse> getSeatAvailability(String showId) {
-        List<ShowSeat> showSeats = showSeatRepository.findByShowShowIdOrderBySeatNameAsc(showId);
+        // First check if show exists
+        if(!showRepository.existsById(showId)) throw new RuntimeException("Show not found");
 
-        if (showSeats.isEmpty()) {
-            throw new RuntimeException("No seats mapped for this show!");
-        }
-
-        return showSeats.stream()
+        return showSeatRepository.findByShowShowIdOrderBySeatNameAsc(showId).stream()
                 .map(ss -> SeatStatusResponse.builder()
                         .seatId(ss.getSeat().getSeatId())
                         .seatName(ss.getSeat().getName())
-                        .isBooked(ss.isBooked()) //
+                        .isBooked(ss.isBooked())
                         .build())
                 .toList();
     }

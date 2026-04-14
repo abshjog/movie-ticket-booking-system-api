@@ -5,9 +5,8 @@ import com.example.mdb.dto.TheaterResponse;
 import com.example.mdb.entity.Theater;
 import com.example.mdb.entity.TheaterOwner;
 import com.example.mdb.entity.UserDetails;
-import com.example.mdb.enums.UserRole;
-import com.example.mdb.exception.TheaterNotFoundByIdException;
-import com.example.mdb.exception.UserNotFoundByEmailException;
+import com.example.mdb.exception.TheaterNotFoundException;
+import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.mapper.TheaterMapper;
 import com.example.mdb.repository.TheaterRepository;
 import com.example.mdb.repository.UserRepository;
@@ -24,53 +23,43 @@ public class TheaterServiceImpl implements TheaterService {
     private final UserRepository userRepository;
 
     @Override
-    public TheaterResponse addTheater(String email, TheaterRequest theaterRequest) {
+    public TheaterResponse addTheater(String email, TheaterRequest request) {
+        // 1. Owner search
+        UserDetails user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Owner not found"));
 
-        if (userRepository.existsByEmail(email) && userRepository.findByEmail(email).getUserRole() == UserRole.THEATER_OWNER) {
-            UserDetails user = userRepository.findByEmail(email);
-            Theater theater = copy(theaterRequest, new Theater(), user);
-            return theaterMapper.theaterResponseMapper(theater);
+        // 2. Duplicate Check
+        if (theaterRepository.existsByNameAndAddressAndCity(request.name(), request.address(), request.city())) {
+            throw new RuntimeException("Bhai, ye theater is address par pehle se registered hai!");
         }
-        throw new UserNotFoundByEmailException("Theater Owner with the provided email is not found");
-    }
 
-    private Theater copy(TheaterRequest theaterRequest, Theater theater, UserDetails user) {
+        // 3. Mapping & Saving
+        Theater theater = theaterMapper.mapToEntity(request);
+        theater.setTheaterOwner((TheaterOwner) user); // Owner set karna zaroori hai
 
-        theater.setAddress(theaterRequest.address());
-        theater.setCity(theaterRequest.city());
-        theater.setName(theaterRequest.name());
-        theater.setLandmark(theaterRequest.landmark());
-        theater.setTheaterOwner((TheaterOwner) user);
-        theaterRepository.save(theater);
-        return theater;
+        theater = theaterRepository.save(theater);
+        return theaterMapper.theaterResponseMapper(theater);
     }
 
     @Override
     public TheaterResponse findTheater(String theaterId) {
-        if(theaterRepository.existsById(theaterId)){
-            Theater theater = theaterRepository.findById(theaterId).get();
-            return theaterMapper.theaterResponseMapper(theater);
-        }
-        throw new TheaterNotFoundByIdException("Theater not found by the entered ID");
+        return theaterRepository.findById(theaterId)
+                .map(theaterMapper::theaterResponseMapper)
+                .orElseThrow(() -> new TheaterNotFoundException("Theater not found with ID: " + theaterId));
     }
 
     @Override
-    public TheaterResponse updateTheater(String theaterId, TheaterRequest theaterRequest) {
-        if(theaterRepository.existsById(theaterId)) {
-            Theater theater = theaterRepository.findById(theaterId).get();
-            theater = copy(theaterRequest, theater);
-            return theaterMapper.theaterResponseMapper(theater);
-        }
-        throw new TheaterNotFoundByIdException("Theater not found by the provided ID");
-    }
+    public TheaterResponse updateTheater(String theaterId, TheaterRequest request) {
+        Theater theater = theaterRepository.findById(theaterId)
+                .orElseThrow(() -> new TheaterNotFoundException("Theater not found with ID: " + theaterId));
 
-    private Theater copy(TheaterRequest theaterRequest, Theater theater) {
+        // Manually update fields (ya ek common update helper use karo)
+        theater.setName(request.name());
+        theater.setAddress(request.address());
+        theater.setCity(request.city());
+        theater.setLandmark(request.landmark());
 
-        theater.setAddress(theaterRequest.address());
-        theater.setCity(theaterRequest.city());
-        theater.setName(theaterRequest.name());
-        theater.setLandmark(theaterRequest.landmark());
-        theaterRepository.save(theater);
-        return theater;
+        theater = theaterRepository.save(theater);
+        return theaterMapper.theaterResponseMapper(theater);
     }
 }

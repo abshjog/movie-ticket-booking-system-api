@@ -19,12 +19,12 @@ public class UserDetailServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        com.example.mdb.entity.UserDetails user = userRepository.findByEmail(username);
+        com.example.mdb.entity.UserDetails user = userRepository.findByEmail(username)
+                .orElseThrow(() -> {
+                    log.error("Failed to find User by email: {}", username);
+                    return new UsernameNotFoundException("Email not found in the database: " + username);
+                });
 
-        if(user == null){
-            log.error("Failed to find User by name: {}", username);
-            throw new UsernameNotFoundException("Email not found in the database");
-        }
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())

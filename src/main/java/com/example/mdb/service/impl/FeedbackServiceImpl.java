@@ -5,7 +5,8 @@ import com.example.mdb.dto.FeedbackResponse;
 import com.example.mdb.entity.Feedback;
 import com.example.mdb.entity.Movie;
 import com.example.mdb.entity.User;
-import com.example.mdb.exception.MovieNotFoundByIdException;
+import com.example.mdb.exception.MovieNotFoundException;
+import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.mapper.FeedbackMapper;
 import com.example.mdb.repository.FeedbackRepository;
 import com.example.mdb.repository.MovieRepository;
@@ -27,9 +28,10 @@ public class FeedbackServiceImpl implements FeedbackService {
     public FeedbackResponse createFeedback(String movieId, FeedbackRequest feedbackRequest, String email) {
 
         Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new MovieNotFoundByIdException("Movie with the provided ID is not found. Please verify the ID and try again."));
+                .orElseThrow(() -> new MovieNotFoundException("Movie with the provided ID is not found."));
 
-        User user = (User) userRepository.findByEmail(email);
+        User user = (User) userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         if (feedbackRepository.existsByMovieAndUser(movie, user)) {
             throw new IllegalStateException("You have already reviewed this movie!");

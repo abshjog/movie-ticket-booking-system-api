@@ -1,5 +1,6 @@
 package com.example.mdb.mapper;
 
+import com.example.mdb.dto.TheaterRequest;
 import com.example.mdb.dto.TheaterResponse;
 import com.example.mdb.entity.Theater;
 import org.springframework.stereotype.Component;
@@ -18,5 +19,17 @@ public class TheaterMapper {
                 .city(theater.getCity())
                 .landmark(theater.getLandmark())
                 .build();
+    }
+
+    public Theater mapToEntity(TheaterRequest request) {
+        if (request == null) return null;
+
+        Theater theater = new Theater();
+        theater.setName(request.name());
+        theater.setAddress(request.address());
+        theater.setCity(request.city());
+        theater.setLandmark(request.landmark());
+
+        return theater;
     }
 }
