@@ -17,6 +17,7 @@ public class BookingMapper {
 
         return BookingResponse.builder()
                 .bookingId(booking.getBookingId())
+                .razorpayOrderId(booking.getRazorpayOrderId())
                 .totalAmount(booking.getTotalAmount())
                 .status(booking.getBookingStatus().name())
                 .movieTitle(booking.getShow().getMovie().getTitle())

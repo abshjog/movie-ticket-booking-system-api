@@ -26,11 +26,20 @@ public class Booking {
     private String bookingId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "booking_status", length = 20) //
+    @Column(name = "booking_status", length = 20)
     private BookingStatus bookingStatus;
 
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
+
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    @Column(name = "razorpay_signature")
+    private String razorpaySignature;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

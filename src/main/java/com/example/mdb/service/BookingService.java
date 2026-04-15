@@ -7,8 +7,6 @@ public interface BookingService {
 
     BookingResponse createBooking(BookingRequest bookingRequest, String email);
 
-    BookingResponse confirmBooking(String bookingId);
-
     void expireOldBookings();
 
     BookingResponse cancelBooking(String bookingId, String email);
