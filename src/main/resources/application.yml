@@ -32,3 +32,9 @@ app:
 server:
   servlet:
     context-path: /api/v1
+
+# Razorpay Configuration
+razorpay:
+  key:
+    id: "${RAZORPAY_KEY_ID:rzp_test_SdQB3dXy2AYPRE}"
+    secret: "${RAZORPAY_KEY_SECRET:mRw6D0ey1WUxvm0JnOYxINne}"

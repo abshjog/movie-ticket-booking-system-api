@@ -34,6 +34,8 @@ public class BookingServiceImpl implements BookingService {
 
     private static final int BOOKING_BUFFER_MINUTES = 5;
 
+    @Override
+    @Transactional
     public BookingResponse createBooking(BookingRequest bookingRequest, String email) {
 
         UserDetails userDetails = userRepository.findByEmail(email)
@@ -94,21 +96,6 @@ public class BookingServiceImpl implements BookingService {
         log.info("Booking Processed: ID {} | User {} | Show {}", savedBooking.getBookingId(), email, showId);
 
         return bookingMapper.mapToResponse(savedBooking);
-    }
-
-    @Override
-    @Transactional
-    public BookingResponse confirmBooking(String bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found!"));
-
-        if (booking.getBookingStatus() != BookingStatus.PENDING) {
-            throw new BookingNotAllowedException("Invalid Status: Cannot confirm booking in " + booking.getBookingStatus() + " state.");
-        }
-
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
-        Booking updatedBooking = bookingRepository.save(booking);
-        return bookingMapper.mapToResponse(updatedBooking);
     }
 
     @Override

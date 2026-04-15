@@ -32,13 +32,6 @@ public class BookingController {
         return responseBuilder.success(HttpStatus.CREATED, "Booking Initiated! Status: PENDING", response);
     }
 
-    @PostMapping("/{bookingId}/confirm")
-    @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<ResponseStructure<BookingResponse>> confirmBooking(@PathVariable String bookingId) {
-        BookingResponse response = bookingService.confirmBooking(bookingId);
-        return responseBuilder.success(HttpStatus.OK, "Ticket Confirmed! Enjoy your movie 🍿", response);
-    }
-
     @PatchMapping("/{bookingId}/cancel")
     @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<ResponseStructure<BookingResponse>> cancelBooking(
