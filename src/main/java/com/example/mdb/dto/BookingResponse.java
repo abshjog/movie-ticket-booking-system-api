@@ -8,6 +8,8 @@ import java.util.List;
 public record BookingResponse(
         String bookingId,
         String razorpayOrderId,
+        double baseAmount,
+        double taxAmount,
         double totalAmount,
         String status,
         String movieTitle,

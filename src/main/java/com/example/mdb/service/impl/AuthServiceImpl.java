@@ -43,7 +43,6 @@ public class AuthServiceImpl implements AuthService {
         if (!authentication.isAuthenticated())
             throw new UsernameNotFoundException("Invalid Login Details");
 
-        // FIX: Added .orElseThrow()
         UserDetails userDetails = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + authentication.getName()));
 
@@ -58,7 +57,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse refresh(AuthenticatedTokenDetails tokenDetails) {
-        // FIX: Using tokenDetails.email() and added .orElseThrow()
         UserDetails user = userRepository.findByEmail(tokenDetails.email())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + tokenDetails.email()));
 

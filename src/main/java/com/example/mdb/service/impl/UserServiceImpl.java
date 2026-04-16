@@ -49,16 +49,13 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateUser(String userId, UserUpdationRequest userRequest, String authenticatedEmail) {
         log.info("Editing user with ID: {}", userId);
 
-        // 1. Pehle user ko ID se dhoondo
         UserDetails user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // 2. Security Check: Kya ye user apni hi profile edit kar raha hai?
         if (!user.getEmail().equals(authenticatedEmail)) {
             throw new AccessDeniedException("Security Alert: You can only update your own profile!");
         }
 
-        // 3. Email Conflict Check: Agar email badal raha hai toh check karo naya email unique hai ya nahi
         if (!user.getEmail().equals(userRequest.email()) && userRepository.existsByEmail(userRequest.email())) {
             throw new EmailAlreadyExistsException("The new email is already taken by another user.");
         }
@@ -93,11 +90,9 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(page, size);
         Page<UserDetails> usersPage = userRepository.findAll(pageable);
 
-        // Mapper use karke consistency banaye rakhte hain
         return usersPage.map(userMapper::userResponseMapper);
     }
 
-    // Helper method for Registration
     private UserDetails copy(UserDetails userEntity, UserRegistrationRequest request) {
         userEntity.setUserRole(request.userRole());
         userEntity.setPassword(passwordEncoder.encode(request.password()));
@@ -109,13 +104,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(userEntity);
     }
 
-    // Helper method for Updates
     private UserDetails copy(UserDetails userEntity, UserUpdationRequest request) {
         userEntity.setDateOfBirth(request.dateOfBirth());
         userEntity.setPhoneNumber(request.phoneNumber());
         userEntity.setEmail(request.email());
         userEntity.setUsername(request.username());
-        // Note: Deleted status ko nahi chhedna chahiye update mein
         return userRepository.save(userEntity);
     }
 }

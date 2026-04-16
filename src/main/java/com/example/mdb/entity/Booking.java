@@ -29,6 +29,12 @@ public class Booking {
     @Column(name = "booking_status", length = 20)
     private BookingStatus bookingStatus;
 
+    @Column(name = "base_amount", nullable = false)
+    private Double baseAmount;
+
+    @Column(name = "tax_amount", nullable = false)
+    private Double taxAmount;
+
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
