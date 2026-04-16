@@ -29,7 +29,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final RestResponseBuilder restResponseBuilder;
 
-    // 1. INPUT VALIDATION LOGIC (From FieldErrorExceptionHandler)
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
@@ -57,9 +56,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(errorResponse);
     }
 
-    // ========================================================================
-    // 2. YOUR ORIGINAL LOGIC & MESSAGES
-    // ========================================================================
+
     @ExceptionHandler(SeatAlreadyBookedException.class)
     public ResponseEntity<ErrorStructure<String>> handleSeatAlreadyBooked(SeatAlreadyBookedException ex) {
         return restResponseBuilder.error(
@@ -92,9 +89,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return restResponseBuilder.error(HttpStatus.UNAUTHORIZED, ex.getMessage(), "No Username Found");
     }
 
-    // ========================================================================
-    // 3. MERGED RESOURCE NOT FOUND LOGIC (Movie, Theater, User, Screen)
-    // ========================================================================
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorStructure<String>> handleUserNotFound(UserNotFoundException ex) {
         return restResponseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "User or Owner not found in the Database.");
@@ -120,9 +115,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return restResponseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "Entered city not found.");
     }
 
-    // ========================================================================
-    // 4. BUSINESS CONFLICTS & RUNTIME LOGIC
-    // ========================================================================
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorStructure<String>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return restResponseBuilder.error(HttpStatus.CONFLICT, ex.getMessage(), "A user with this email is already registered.");
@@ -157,7 +150,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return restResponseBuilder.error(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), "An unexpected runtime error occurred.");
     }
 
-    // Helper DTO for validation errors
+
     @Getter
     @Builder
     @ToString

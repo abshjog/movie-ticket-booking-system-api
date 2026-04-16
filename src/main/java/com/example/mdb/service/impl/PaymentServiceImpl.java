@@ -36,8 +36,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
 
         JSONObject orderRequest = new JSONObject();
-        // Amount is converted to paise (1 INR = 100 Paise)
-        orderRequest.put("amount", (int)(booking.getTotalAmount() * 100));
+
+        long amountInPaise = Math.round(booking.getTotalAmount() * 100);
+
+        orderRequest.put("amount", amountInPaise);
         orderRequest.put("currency", "INR");
         orderRequest.put("receipt", "txn_" + bookingId.substring(0, 8));
 
@@ -47,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setRazorpayOrderId(razorpayOrderId);
         bookingRepository.save(booking);
 
-        log.info("Razorpay order successfully created. Order ID: {} for Booking ID: {}", razorpayOrderId, bookingId);
+        log.info("Razorpay order created successfully. Amount: {} paise. Order ID: {}", amountInPaise, razorpayOrderId);
         return razorpayOrderId;
     }
 
@@ -61,7 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
         options.put("razorpay_signature", request.razorpaySignature());
 
         boolean isValid = Utils.verifyPaymentSignature(options, keySecret);
-        // boolean isValid = true;
+        //boolean isValid = true;
 
         if (isValid) {
             Booking booking = bookingRepository.findById(bookingId)
@@ -81,7 +83,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             return bookingMapper.mapToResponse(savedBooking);
         } else {
-            log.error("Signature mismatch detected. Potential security breach or invalid data for Booking ID: {}", bookingId);
+            log.error("Signature mismatch detected for Booking ID: {}", bookingId);
             throw new RuntimeException("Payment verification failed: Invalid signature provided.");
         }
     }

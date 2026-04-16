@@ -24,18 +24,16 @@ public class TheaterServiceImpl implements TheaterService {
 
     @Override
     public TheaterResponse addTheater(String email, TheaterRequest request) {
-        // 1. Owner search
+
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Owner not found"));
 
-        // 2. Duplicate Check
         if (theaterRepository.existsByNameAndAddressAndCity(request.name(), request.address(), request.city())) {
-            throw new RuntimeException("Bhai, ye theater is address par pehle se registered hai!");
+            throw new RuntimeException("This theatre is already registered at this address!");
         }
 
-        // 3. Mapping & Saving
         Theater theater = theaterMapper.mapToEntity(request);
-        theater.setTheaterOwner((TheaterOwner) user); // Owner set karna zaroori hai
+        theater.setTheaterOwner((TheaterOwner) user);
 
         theater = theaterRepository.save(theater);
         return theaterMapper.theaterResponseMapper(theater);
@@ -53,7 +51,6 @@ public class TheaterServiceImpl implements TheaterService {
         Theater theater = theaterRepository.findById(theaterId)
                 .orElseThrow(() -> new TheaterNotFoundException("Theater not found with ID: " + theaterId));
 
-        // Manually update fields (ya ek common update helper use karo)
         theater.setName(request.name());
         theater.setAddress(request.address());
         theater.setCity(request.city());

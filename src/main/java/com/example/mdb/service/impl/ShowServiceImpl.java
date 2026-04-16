@@ -64,8 +64,7 @@ public class ShowServiceImpl implements ShowService {
         show.setTicketPrice(showRequest.ticketPrice());
 
         Show savedShow = showRepository.save(show);
-
-        // Standard: Generating ShowSeats from Physical Seats
+        
         List<ShowSeat> showSeats = screen.getSeats().stream().map(seat -> {
             ShowSeat ss = new ShowSeat();
             ss.setShow(savedShow);
@@ -81,7 +80,6 @@ public class ShowServiceImpl implements ShowService {
 
     @Override
     public Page<TheaterShowProjection> fetchShows(String movieId, MovieShowsRequest showsRequest, String city) {
-        // ... (Tera purana logic ekdum sahi hai yahan, koi change nahi chahiye) ...
         ZoneId zoneId = (showsRequest.zoneId() == null || showsRequest.zoneId().isBlank())
                 ? ZoneId.of("UTC")
                 : ZoneId.of(ZoneId.SHORT_IDS.getOrDefault(showsRequest.zoneId().toUpperCase(), "UTC"));

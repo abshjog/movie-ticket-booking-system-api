@@ -31,7 +31,6 @@ public class MovieServiceImpl implements MovieService {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException("Movie not found with ID: " + movieId));
 
-        // Step 2: Calculate Average Rating
         List<Feedback> feedbacks = movie.getFeedbacks();
         double avgRatings = (feedbacks != null && !feedbacks.isEmpty())
                 ? feedbacks.stream().mapToDouble(Feedback::getRating).average().orElse(0.0)
@@ -47,7 +46,6 @@ public class MovieServiceImpl implements MovieService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Movie> moviePage = movieRepository.findByTitleContainingIgnoreCase(search, pageable);
 
-        // Converting Set to List for API consistency
         return new ArrayList<>(movieMapper.movieResponseMapper(moviePage.getContent()));
     }
 }
