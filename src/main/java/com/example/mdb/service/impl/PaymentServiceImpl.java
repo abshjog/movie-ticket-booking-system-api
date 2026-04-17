@@ -9,6 +9,7 @@ import com.example.mdb.repository.BookingRepository;
 import com.example.mdb.service.PaymentService;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
+import com.razorpay.Refund;
 import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,5 +87,24 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Signature mismatch detected for Booking ID: {}", bookingId);
             throw new RuntimeException("Payment verification failed: Invalid signature provided.");
         }
+    }
+
+    @Override
+    @Transactional
+    public String initiateRefund(String razorpayPaymentId, double refundAmount) throws Exception {
+        if (razorpayPaymentId == null || razorpayPaymentId.isEmpty()) {
+            throw new RuntimeException("Razorpay Payment ID is missing. Cannot process refund.");
+        }
+
+        JSONObject refundRequest = new JSONObject();
+        long amountInPaise = Math.round(refundAmount * 100);
+        refundRequest.put("amount", amountInPaise);
+        refundRequest.put("speed", "optimum");
+
+        Refund refund = razorpayClient.payments.refund(razorpayPaymentId, refundRequest);
+        String refundId = refund.get("id");
+
+        log.info("Razorpay refund initiated successfully. Refund ID: {} for Payment ID: {}", refundId, razorpayPaymentId);
+        return refundId;
     }
 }

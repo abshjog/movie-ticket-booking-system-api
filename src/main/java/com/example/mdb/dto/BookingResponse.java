@@ -17,5 +17,6 @@ public record BookingResponse(
         String screenName,
         String screenType,
         LocalDateTime startsAt,
-        List<String> seatNames
+        List<String> seatNames,
+        String razorpayRefundId
 ) {}

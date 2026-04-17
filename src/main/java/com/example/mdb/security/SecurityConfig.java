@@ -44,6 +44,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/shows/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new AuthFilter(jwtService, TokenType.ACCESS), UsernamePasswordAuthenticationFilter.class);
 

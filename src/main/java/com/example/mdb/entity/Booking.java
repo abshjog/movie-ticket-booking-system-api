@@ -47,6 +47,9 @@ public class Booking {
     @Column(name = "razorpay_signature")
     private String razorpaySignature;
 
+    @Column(name = "razorpay_refund_id")
+    private String razorpayRefundId;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore
