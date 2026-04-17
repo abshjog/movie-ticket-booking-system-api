@@ -34,6 +34,7 @@ public class BookingMapper {
                         .map(Seat::getName)
                         .sorted()
                         .collect(Collectors.toList()))
+                .razorpayRefundId(booking.getRazorpayRefundId())
                 .build();
     }
 }

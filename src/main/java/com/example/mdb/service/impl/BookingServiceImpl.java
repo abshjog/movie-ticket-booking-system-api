@@ -9,6 +9,7 @@ import com.example.mdb.exception.SeatAlreadyBookedException;
 import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.repository.*;
 import com.example.mdb.service.BookingService;
+import com.example.mdb.service.PaymentService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final ShowSeatRepository showSeatRepository;
     private final BookingMapper bookingMapper;
+    private final PaymentService paymentService;
 
     private static final int BOOKING_BUFFER_MINUTES = 5;
 
@@ -146,6 +148,35 @@ public class BookingServiceImpl implements BookingService {
             throw new BookingNotAllowedException("Too Late! Cancellation is only allowed up to 60 minutes before the show starts.");
         }
 
+        // 1. Calculate Refund Percentage based on time
+        double refundPercent = 0.0;
+        if (minutesToStart >= 120) {
+            refundPercent = 0.75;
+        } else if (minutesToStart >= 60) {
+            refundPercent = 0.50;
+        }
+
+        // 2. Financial Precision Math
+        BigDecimal baseAmount = BigDecimal.valueOf(booking.getBaseAmount());
+        BigDecimal taxAmount = BigDecimal.valueOf(booking.getTaxAmount());
+
+        BigDecimal refundBase = baseAmount.multiply(BigDecimal.valueOf(refundPercent))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal totalRefundAmount = refundBase.add(taxAmount)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // 3. Trigger Razorpay Refund API
+        try {
+            String refundId = paymentService.initiateRefund(booking.getRazorpayPaymentId(), totalRefundAmount.doubleValue());
+            booking.setRazorpayRefundId(refundId);
+        } catch (Exception e) {
+            log.error("Payment Gateway Error during refund for Booking ID: {}. Reason: {}", bookingId, e.getMessage());
+            // This exception triggers rollback. Seats will NOT be released.
+            throw new RuntimeException("Refund processing failed with Payment Gateway. Cancellation aborted.");
+        }
+
+        // 4. Release Seats (Only happens if Razorpay API didn't throw exception)
         List<String> seatIds = booking.getSeats().stream()
                 .map(Seat::getSeatId)
                 .toList();
@@ -155,10 +186,11 @@ public class BookingServiceImpl implements BookingService {
         bookedSeats.forEach(ss -> ss.setBooked(false));
         showSeatRepository.saveAll(bookedSeats);
 
+        // 5. Update Status
         booking.setBookingStatus(BookingStatus.CANCELLED);
         Booking cancelledBooking = bookingRepository.save(booking);
 
-        log.info("Booking Cancelled: ID {} by User {}", bookingId, email);
+        log.info("Booking Cancelled successfully. ID: {} | User: {} | Refund Amount: ₹{}", bookingId, email, totalRefundAmount);
 
         return bookingMapper.mapToResponse(cancelledBooking);
     }

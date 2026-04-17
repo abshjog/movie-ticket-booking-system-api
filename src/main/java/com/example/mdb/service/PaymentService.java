@@ -8,4 +8,6 @@ public interface PaymentService {
     String createPaymentOrder(String bookingId) throws Exception;
 
     BookingResponse verifyPaymentAndConfirm(String bookingId, PaymentCallbackRequest request) throws Exception;
+
+    String initiateRefund(String razorpayPaymentId, double refundAmount) throws Exception;
 }
