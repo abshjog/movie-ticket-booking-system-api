@@ -1,5 +1,6 @@
 package com.example.mdb.service.impl;
 
+import com.example.mdb.dto.ChangePasswordRequest;
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.dto.UserUpdationRequest;
@@ -68,11 +69,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse softDeleteUser(String userId, String authenticatedEmail) {
-        // 1. Fetch User
         UserDetails user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // 2. Security Check
         if (!user.getEmail().equals(authenticatedEmail)) {
             throw new AccessDeniedException("Security Alert: You cannot delete someone else's account!");
         }
@@ -86,6 +85,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void changePassword(String userId, ChangePasswordRequest request, String authenticatedEmail) {
+        log.info("Initiating password change for user ID: {}", userId);
+
+        UserDetails user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        if (!user.getEmail().equals(authenticatedEmail)) {
+            throw new AccessDeniedException("Security Alert: You can only change your own password!");
+        }
+
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Incorrect old password!");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be the same as the old password!");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        log.info("Password successfully changed for user: {}", user.getEmail());
+    }
+
+    @Override
     public Page<UserResponse> findAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<UserDetails> usersPage = userRepository.findAll(pageable);
@@ -94,6 +117,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDetails copy(UserDetails userEntity, UserRegistrationRequest request) {
+        userEntity.setFullName(request.fullName()); // 👇 Mapping FullName
         userEntity.setUserRole(request.userRole());
         userEntity.setPassword(passwordEncoder.encode(request.password()));
         userEntity.setEmail(request.email());
@@ -105,6 +129,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDetails copy(UserDetails userEntity, UserUpdationRequest request) {
+        userEntity.setFullName(request.fullName()); // 👇 Mapping FullName
         userEntity.setDateOfBirth(request.dateOfBirth());
         userEntity.setPhoneNumber(request.phoneNumber());
         userEntity.setEmail(request.email());

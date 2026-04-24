@@ -9,6 +9,13 @@ import java.time.LocalDate;
 
 public record UserUpdationRequest(
 
+        @NotNull(message = "Full name must not be null")
+        @Pattern(
+                regexp = "^[a-zA-Z\\s]{3,50}$",
+                message = "Full name must be 3-50 characters long and contain only letters and spaces"
+        )
+        String fullName,
+
         @NotNull
         @Pattern(regexp = "^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z][a-zA-Z0-9._]*[a-zA-Z0-9]$",
                 message = "Username should be minimum of 3 and maximum of 20 alpha-numeric character and can have special characters . and _")

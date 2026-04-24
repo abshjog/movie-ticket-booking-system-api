@@ -4,9 +4,8 @@ import com.example.mdb.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -20,7 +19,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE user_details SET is_deleted = true WHERE user_id = ?")
-@Where(clause = "is_deleted = false")
+@SQLRestriction("is_deleted = false")
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "user_details")
 public class UserDetails {
@@ -29,6 +28,9 @@ public class UserDetails {
         @GeneratedValue(strategy = GenerationType.UUID)
         @Column(name = "user_id")
         private String userId;
+
+        @Column(name = "full_name")
+        private String fullName;
 
         @Column(name = "username")
         private String username;

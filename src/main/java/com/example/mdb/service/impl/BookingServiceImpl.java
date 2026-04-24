@@ -9,7 +9,9 @@ import com.example.mdb.exception.SeatAlreadyBookedException;
 import com.example.mdb.exception.UserNotFoundException;
 import com.example.mdb.repository.*;
 import com.example.mdb.service.BookingService;
+import com.example.mdb.service.NotificationService;
 import com.example.mdb.service.PaymentService;
+import com.example.mdb.utility.IdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,8 @@ public class BookingServiceImpl implements BookingService {
     private final ShowSeatRepository showSeatRepository;
     private final BookingMapper bookingMapper;
     private final PaymentService paymentService;
+    private final IdGenerator idGenerator;
+    private final NotificationService notificationService;
 
     private static final int BOOKING_BUFFER_MINUTES = 5;
 
@@ -100,9 +104,15 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setBookingStatus(BookingStatus.PENDING);
 
+        String referenceCode;
+        do {
+            referenceCode = idGenerator.generateReferenceCode();
+        } while (bookingRepository.existsByReferenceCode(referenceCode));
+        booking.setReferenceCode(referenceCode);
+
         Booking savedBooking = bookingRepository.save(booking);
-        log.info("Booking Processed with Taxes: ID {} | Base ₹{} | Tax ₹{} | Total ₹{}",
-                savedBooking.getBookingId(), baseAmount, taxAmount, totalAmount);
+        log.info("Booking Processed with Taxes: ID {} | Ref: {} | Total ₹{}",
+                savedBooking.getBookingId(), savedBooking.getReferenceCode(), totalAmount);
 
         return bookingMapper.mapToResponse(savedBooking);
     }
@@ -148,7 +158,6 @@ public class BookingServiceImpl implements BookingService {
             throw new BookingNotAllowedException("Too Late! Cancellation is only allowed up to 60 minutes before the show starts.");
         }
 
-        // 1. Calculate Refund Percentage based on time
         double refundPercent = 0.0;
         if (minutesToStart >= 120) {
             refundPercent = 0.75;
@@ -156,7 +165,6 @@ public class BookingServiceImpl implements BookingService {
             refundPercent = 0.50;
         }
 
-        // 2. Financial Precision Math
         BigDecimal baseAmount = BigDecimal.valueOf(booking.getBaseAmount());
         BigDecimal taxAmount = BigDecimal.valueOf(booking.getTaxAmount());
 
@@ -166,17 +174,14 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal totalRefundAmount = refundBase.add(taxAmount)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        // 3. Trigger Razorpay Refund API
         try {
             String refundId = paymentService.initiateRefund(booking.getRazorpayPaymentId(), totalRefundAmount.doubleValue());
             booking.setRazorpayRefundId(refundId);
         } catch (Exception e) {
             log.error("Payment Gateway Error during refund for Booking ID: {}. Reason: {}", bookingId, e.getMessage());
-            // This exception triggers rollback. Seats will NOT be released.
             throw new RuntimeException("Refund processing failed with Payment Gateway. Cancellation aborted.");
         }
 
-        // 4. Release Seats (Only happens if Razorpay API didn't throw exception)
         List<String> seatIds = booking.getSeats().stream()
                 .map(Seat::getSeatId)
                 .toList();
@@ -186,12 +191,47 @@ public class BookingServiceImpl implements BookingService {
         bookedSeats.forEach(ss -> ss.setBooked(false));
         showSeatRepository.saveAll(bookedSeats);
 
-        // 5. Update Status
         booking.setBookingStatus(BookingStatus.CANCELLED);
         Booking cancelledBooking = bookingRepository.save(booking);
 
         log.info("Booking Cancelled successfully. ID: {} | User: {} | Refund Amount: ₹{}", bookingId, email, totalRefundAmount);
 
         return bookingMapper.mapToResponse(cancelledBooking);
+    }
+
+    @Override
+    @Transactional
+    public void resendTicket(String bookingId, String email) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found!"));
+
+        if (!booking.getUser().getEmail().equals(email)) {
+            throw new BookingNotAllowedException("Security Alert: You can only request tickets for your own bookings!");
+        }
+
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingNotAllowedException("Booking is not in CONFIRMED state.");
+        }
+
+        booking.getSeats().size();
+        booking.getUser().getFullName();
+        booking.getRazorpayOrderId();
+
+        if (booking.getShow() != null) {
+            booking.getShow().getStartsAt();
+            if (booking.getShow().getMovie() != null) booking.getShow().getMovie().getTitle();
+            if (booking.getShow().getScreen() != null) {
+                booking.getShow().getScreen().getName();
+                booking.getShow().getScreen().getScreenType();
+                if (booking.getShow().getScreen().getTheater() != null) {
+                    booking.getShow().getScreen().getTheater().getName();
+                    booking.getShow().getScreen().getTheater().getAddress();
+                    booking.getShow().getScreen().getTheater().getCity();
+                }
+            }
+        }
+
+        notificationService.sendBookingConfirmation(booking);
+        log.info("Ticket resend triggered for Reference: {}", booking.getReferenceCode());
     }
 }

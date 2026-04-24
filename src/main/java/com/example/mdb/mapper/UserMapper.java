@@ -13,6 +13,7 @@ public class UserMapper {
 
         return UserResponse.builder()
                 .userId(userDetails.getUserId())
+                .fullName(userDetails.getFullName())
                 .username(userDetails.getUsername())
                 .email(userDetails.getEmail())
                 .phoneNumber(userDetails.getPhoneNumber())

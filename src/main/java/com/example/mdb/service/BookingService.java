@@ -10,4 +10,6 @@ public interface BookingService {
     void expireOldBookings();
 
     BookingResponse cancelBooking(String bookingId, String email);
+
+    void resendTicket(String bookingId, String email);
 }

@@ -14,6 +14,8 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
 
     Optional<Booking> findByRazorpayOrderId(String razorpayOrderId);
 
+    boolean existsByReferenceCode(String referenceCode);
+
     @Query("SELECT COUNT(s) FROM Booking b JOIN b.seats s " +
             "WHERE b.show.showId = :showId " +
             "AND s.seatId IN :seatIds " +

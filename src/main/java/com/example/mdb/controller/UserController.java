@@ -1,5 +1,6 @@
 package com.example.mdb.controller;
 
+import com.example.mdb.dto.ChangePasswordRequest;
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.dto.UserUpdationRequest;
@@ -49,5 +50,16 @@ public class UserController {
             Authentication auth){
         UserResponse userDetails = userService.softDeleteUser(userId, auth.getName());
         return restResponseBuilder.success(HttpStatus.OK, "User account successfully deleted", userDetails);
+    }
+
+    @PutMapping("/{userId}/password")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    public ResponseEntity<ResponseStructure<String>> changePassword(
+            @PathVariable String userId,
+            @RequestBody @Valid ChangePasswordRequest request,
+            Authentication auth) {
+
+        userService.changePassword(userId, request, auth.getName());
+        return restResponseBuilder.success(HttpStatus.OK, "Password changed successfully", null);
     }
 }
