@@ -1,5 +1,6 @@
 package com.example.mdb.service;
 
+import com.example.mdb.dto.ChangePasswordRequest;
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.dto.UserUpdationRequest;
@@ -15,4 +16,6 @@ public interface UserService {
     UserResponse updateUser(String userId, @Valid UserUpdationRequest user, String authenticatedEmail);
 
     UserResponse softDeleteUser(String userId, String authenticatedEmail);
+
+    void changePassword(String userId, @Valid ChangePasswordRequest request, String authenticatedEmail);
 }

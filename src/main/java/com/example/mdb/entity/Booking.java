@@ -25,6 +25,9 @@ public class Booking {
     @Column(name = "booking_id")
     private String bookingId;
 
+    @Column(name = "reference_code", length = 10, unique = true, nullable = false)
+    private String referenceCode;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_status", length = 20)
     private BookingStatus bookingStatus;

@@ -6,6 +6,7 @@ import com.example.mdb.entity.Booking;
 import com.example.mdb.enums.BookingStatus;
 import com.example.mdb.mapper.BookingMapper;
 import com.example.mdb.repository.BookingRepository;
+import com.example.mdb.service.NotificationService;
 import com.example.mdb.service.PaymentService;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
@@ -26,6 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final RazorpayClient razorpayClient;
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
+    private final NotificationService notificationService;
 
     @Value("${razorpay.key.secret}")
     private String keySecret;
@@ -37,7 +39,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
 
         JSONObject orderRequest = new JSONObject();
-
         long amountInPaise = Math.round(booking.getTotalAmount() * 100);
 
         orderRequest.put("amount", amountInPaise);
@@ -72,15 +73,33 @@ public class PaymentServiceImpl implements PaymentService {
 
             if (booking.getBookingStatus() == BookingStatus.EXPIRED) {
                 log.warn("Payment verification attempted for an EXPIRED booking. ID: {}", bookingId);
-                throw new RuntimeException("Transaction Timeout: The booking has expired (10-minute window exceeded). Refund will be initiated if amount was debited.");
+                throw new RuntimeException("Transaction Timeout: The booking has expired.");
             }
 
             booking.setBookingStatus(BookingStatus.CONFIRMED);
             booking.setRazorpayPaymentId(request.razorpayPaymentId());
             booking.setRazorpaySignature(request.razorpaySignature());
 
+            booking.getUser().getFullName();
+            booking.getSeats().size();
+            if (booking.getShow() != null) {
+                booking.getShow().getStartsAt();
+                if (booking.getShow().getMovie() != null) booking.getShow().getMovie().getTitle();
+                if (booking.getShow().getScreen() != null) {
+                    booking.getShow().getScreen().getName();
+                    booking.getShow().getScreen().getScreenType();
+                    if (booking.getShow().getScreen().getTheater() != null) {
+                        booking.getShow().getScreen().getTheater().getName();
+                        booking.getShow().getScreen().getTheater().getAddress();
+                        booking.getShow().getScreen().getTheater().getCity();
+                    }
+                }
+            }
+
             Booking savedBooking = bookingRepository.save(booking);
             log.info("Payment verified and booking confirmed successfully. Booking ID: {}", bookingId);
+
+            notificationService.sendBookingConfirmation(savedBooking);
 
             return bookingMapper.mapToResponse(savedBooking);
         } else {

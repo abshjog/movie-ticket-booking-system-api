@@ -7,6 +7,13 @@ import java.time.LocalDate;
 
 public record UserRegistrationRequest(
 
+        @NotBlank(message = "Full name must not be blank")
+        @Pattern(
+                regexp = "^[a-zA-Z\\s]{3,50}$",
+                message = "Full name must be 3-50 characters long and contain only letters and spaces"
+        )
+        String fullName,
+
         @NotBlank(message = "Username must not be blank")
         @Pattern(
                 regexp = "^[a-zA-Z0-9@]{3,20}$",

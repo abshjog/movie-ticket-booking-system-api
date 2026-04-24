@@ -7,6 +7,7 @@ import java.util.List;
 @Builder
 public record BookingResponse(
         String bookingId,
+        String referenceCode,
         String razorpayOrderId,
         double baseAmount,
         double taxAmount,
