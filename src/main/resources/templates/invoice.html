@@ -81,7 +81,7 @@
         <tr><th>Particulars</th><th>Qty</th><th>Amount</th></tr>
         </thead>
         <tbody>
-        <tr><td>Booking Charge</td><td th:text="${seatCount}"></td><td th:text="'₹' + ${bookingCharge}"></td></tr>
+        <tr><td>Ticket Base Amount</td><td th:text="${seatCount}"></td><td th:text="'₹' + ${bookingCharge}"></td></tr>
         <tr><td>GST @18%</td><td></td><td th:text="'₹' + ${taxOnCharge}"></td></tr>
         <tr style="font-weight: bold;"><td>Grand Total</td><td></td><td th:text="'₹' + ${totalPlatformFee}"></td></tr>
         </tbody>
@@ -94,7 +94,7 @@
     <div class="notes-section">
         <strong>NOTE:</strong>
         <ol>
-            <li>Value of INR <span th:text="${ticketBaseAmount}"></span> pertains to services provided by Theatre/Event Organizer/ Cinema Owner - <span th:text="${theaterName}"></span>, <span th:text="${theaterCity}"></span>, Audi <span th:text="${screenName}"></span>. Cinema GST Invoice Number: 5224EA1153318</li>
+            <li>Value of INR <span th:text="${ticketBaseAmount}"></span> pertains to services provided by Theatre/Event Organizer/ Cinema Owner - <span th:text="${theaterName}"></span>, <span th:text="${theaterCity}"></span>, <span th:text="${screenName}"></span>. Cinema GST Invoice Number: 5224EA1153318</li>
             <li>Payment received via online mode.</li>
             <li>No Taxes Payable under Reverse Charge.</li>
             <li>Children aged 3 years and above will require a separate ticket. The 3D glasses will be available at the cinema for 3D films and must be returned before you exit the premises.</li>

@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
-    @Value("${app.company.name:CinePass}")
+    @Value("${app.company.name:CINEPASS}")
     private String companyName;
 
     @Async
@@ -49,8 +50,9 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
 
-            String ticketDate = DateTimeFormatter.ofPattern("EEEE, dd MMM", Locale.ENGLISH).format(booking.getShow().getStartsAt().atZone(indiaZone))
-                    + " | " + DateTimeFormatter.ofPattern("h:mm a").format(booking.getShow().getStartsAt().atZone(indiaZone));
+            String emailDate = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy", Locale.ENGLISH).format(booking.getShow().getStartsAt().atZone(indiaZone));
+            String emailTime = DateTimeFormatter.ofPattern("h:mm a").format(booking.getShow().getStartsAt().atZone(indiaZone));
+            String ticketDate = emailDate + " | " + emailTime;
 
             String invoiceOrdinalDate = getOrdinalDate(LocalDate.now(indiaZone));
 
@@ -58,17 +60,29 @@ public class NotificationServiceImpl implements NotificationService {
                     ? booking.getSeats().stream().map(Seat::getName).collect(Collectors.joining(", "))
                     : "Unassigned";
 
-            String qrBase64 = qrCodeGenerator.generateQRCodeBase64(booking.getReferenceCode());
+            byte[] qrCodeBytes = qrCodeGenerator.generateQRCodeImage(booking.getReferenceCode());
+            String qrBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
 
             String rawMovieTitle = (booking.getShow() != null && booking.getShow().getMovie() != null)
                     ? booking.getShow().getMovie().getTitle() : "Movie";
             String safeMovieName = rawMovieTitle.replaceAll("[^a-zA-Z0-9]", "_");
+
+            String certificate = (booking.getShow() != null && booking.getShow().getMovie() != null && booking.getShow().getMovie().getCertificate() != null)
+                    ? booking.getShow().getMovie().getCertificate().toString() : "UA";
 
             String displayScreenType = "2D";
             if (booking.getShow() != null && booking.getShow().getScreen() != null && booking.getShow().getScreen().getScreenType() != null) {
                 displayScreenType = booking.getShow().getScreen().getScreenType().toString().replace("TWO_D", "2D").replace("THREE_D", "3D");
             }
 
+            int seatCount = booking.getSeats() != null ? booking.getSeats().size() : 1;
+            double ticketBaseAmount = booking.getBaseAmount() != null ? booking.getBaseAmount() : 0.0;
+            double taxAmount = booking.getTaxAmount() != null ? booking.getTaxAmount() : 0.0;
+            double grandTotal = booking.getTotalAmount() != null ? booking.getTotalAmount() : (ticketBaseAmount + taxAmount);
+
+            String orderId = booking.getRazorpayOrderId() != null ? booking.getRazorpayOrderId() : "ORD-" + System.currentTimeMillis();
+
+            // 1. GENERATE TICKET PDF
             Context ticketCtx = new Context();
             ticketCtx.setVariable("companyName", companyName);
             ticketCtx.setVariable("movieTitle", rawMovieTitle);
@@ -77,49 +91,62 @@ public class NotificationServiceImpl implements NotificationService {
             ticketCtx.setVariable("theaterCity", booking.getShow().getTheater().getCity());
             ticketCtx.setVariable("screenName", booking.getShow().getScreen().getName());
             ticketCtx.setVariable("screenType", displayScreenType);
-            ticketCtx.setVariable("showDateTime", ticketDate); // Matches new HTML
+            ticketCtx.setVariable("showDateTime", ticketDate);
             ticketCtx.setVariable("seats", seats);
             ticketCtx.setVariable("qrCode", qrBase64);
             ticketCtx.setVariable("bookingId", booking.getReferenceCode());
-
             byte[] ticketPdfBytes = generatePdfFromHtml("m-ticket", ticketCtx);
 
-            int seatCount = booking.getSeats() != null ? booking.getSeats().size() : 1;
-            double bookingCharge = 30.00 * seatCount;
-            double taxOnCharge = bookingCharge * 0.18;
-            double totalPlatformFee = bookingCharge + taxOnCharge;
-
-            String amountInWords = convertToWords((int)totalPlatformFee) + " Rupees And " +
-                    convertToWords((int)Math.round((totalPlatformFee - (int)totalPlatformFee) * 100)) + " Paise Only";
-
+            // 2. GENERATE INVOICE PDF
+            String amountInWords = convertToWords((int)grandTotal) + " Rupees And " + convertToWords((int)Math.round((grandTotal - (int)grandTotal) * 100)) + " Paise Only";
             Context invoiceCtx = new Context();
             invoiceCtx.setVariable("companyName", companyName);
             invoiceCtx.setVariable("invoiceDate", invoiceOrdinalDate);
             invoiceCtx.setVariable("bookingId", booking.getReferenceCode());
-            invoiceCtx.setVariable("orderId", booking.getRazorpayOrderId() != null ? booking.getRazorpayOrderId() : "ORD-" + System.currentTimeMillis());
+            invoiceCtx.setVariable("orderId", orderId);
             invoiceCtx.setVariable("invoiceNo", "TBC" + booking.getReferenceCode() + "I" + (int)(Math.random() * 1000));
-
             invoiceCtx.setVariable("fullName", booking.getUser().getFullName());
             invoiceCtx.setVariable("customerPhone", booking.getUser().getPhoneNumber() != null ? booking.getUser().getPhoneNumber() : "N/A");
-
             invoiceCtx.setVariable("theaterName", booking.getShow().getTheater().getName());
             invoiceCtx.setVariable("theaterAddress", booking.getShow().getTheater().getAddress());
             invoiceCtx.setVariable("theaterCity", booking.getShow().getTheater().getCity());
             invoiceCtx.setVariable("screenName", booking.getShow().getScreen().getName());
-
             invoiceCtx.setVariable("seatCount", String.valueOf(seatCount));
-            invoiceCtx.setVariable("bookingCharge", String.format("%.2f", bookingCharge));
-            invoiceCtx.setVariable("taxOnCharge", String.format("%.2f", taxOnCharge));
-            invoiceCtx.setVariable("totalPlatformFee", String.format("%.2f", totalPlatformFee));
+            invoiceCtx.setVariable("bookingCharge", String.format("%.2f", ticketBaseAmount));
+            invoiceCtx.setVariable("taxOnCharge", String.format("%.2f", taxAmount));
+            invoiceCtx.setVariable("totalPlatformFee", String.format("%.2f", grandTotal));
             invoiceCtx.setVariable("amountInWords", amountInWords);
-            invoiceCtx.setVariable("ticketBaseAmount", String.format("%.2f", booking.getBaseAmount()));
-
+            invoiceCtx.setVariable("ticketBaseAmount", String.format("%.2f", ticketBaseAmount));
             byte[] invoicePdfBytes = generatePdfFromHtml("invoice", invoiceCtx);
 
-            MimeMessage message = prepareMimeMessage(booking, rawMovieTitle, safeMovieName, ticketPdfBytes, invoicePdfBytes);
+            // 3. GENERATE PREMIUM EMAIL BODY
+            Context emailCtx = new Context();
+            emailCtx.setVariable("companyName", companyName);
+            emailCtx.setVariable("paymentMethod", "Online / Razorpay");
+            emailCtx.setVariable("customerName", booking.getUser().getFullName());
+            emailCtx.setVariable("bookingDate", invoiceOrdinalDate);
+            emailCtx.setVariable("orderId", orderId);
+            emailCtx.setVariable("movieTitle", rawMovieTitle);
+            emailCtx.setVariable("certificate", certificate);
+            emailCtx.setVariable("format", "Hindi " + displayScreenType);
+            emailCtx.setVariable("bookingId", booking.getReferenceCode());
+            emailCtx.setVariable("showDate", emailDate);
+            emailCtx.setVariable("showTime", emailTime);
+            emailCtx.setVariable("theaterName", booking.getShow().getTheater().getName() + ", " + booking.getShow().getTheater().getCity());
+            emailCtx.setVariable("screenName", booking.getShow().getScreen().getName());
+            emailCtx.setVariable("seats", seats);
+            emailCtx.setVariable("ticketTotal", String.format("₹%.2f", ticketBaseAmount));
+            emailCtx.setVariable("taxes", String.format("₹%.2f", taxAmount));
+            emailCtx.setVariable("totalAmount", String.format("₹%.2f", grandTotal));
+            emailCtx.setVariable("transactionId", booking.getRazorpayPaymentId() != null ? booking.getRazorpayPaymentId() : "Pending");
+
+            String emailHtmlBody = templateEngine.process("email-ticket", emailCtx);
+
+            // 4. DISPATCH EMAIL
+            MimeMessage message = prepareMimeMessage(booking, rawMovieTitle, safeMovieName, emailHtmlBody, qrCodeBytes, ticketPdfBytes, invoicePdfBytes);
             mailSender.send(message);
 
-            log.info("District-grade confirmation dispatched | ReferenceCode: {}", booking.getReferenceCode());
+            log.info("Premium confirmation dispatched | ReferenceCode: {}", booking.getReferenceCode());
 
         } catch (Exception e) {
             log.error("Failed to process confirmation | Error: {}", e.getMessage(), e);
@@ -135,22 +162,40 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private String convertToWords(int n) {
-        String[] units = {"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+        if (n == 0) return "Zero";
+        String[] units = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
         String[] tens = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
-        if (n < 20) return units[n];
-        if (n < 100) return tens[n / 10] + ((n % 10 != 0) ? " " + units[n % 10] : "");
-        return "Many";
+
+        if (n < 20) {
+            return units[n];
+        } else if (n < 100) {
+            return tens[n / 10] + ((n % 10 != 0) ? " " + units[n % 10] : "");
+        } else if (n < 1000) {
+            return units[n / 100] + " Hundred" + ((n % 100 != 0) ? " And " + convertToWords(n % 100) : "");
+        } else if (n < 100000) {
+            return convertToWords(n / 1000) + " Thousand" + ((n % 1000 != 0) ? " " + convertToWords(n % 1000) : "");
+        } else if (n < 10000000) {
+            return convertToWords(n / 100000) + " Lakh" + ((n % 100000 != 0) ? " " + convertToWords(n % 100000) : "");
+        } else {
+            return convertToWords(n / 10000000) + " Crore" + ((n % 10000000 != 0) ? " " + convertToWords(n % 10000000) : "");
+        }
     }
 
-    private MimeMessage prepareMimeMessage(Booking booking, String rawMovieTitle, String safeMovieName, byte[] ticketPdfBytes, byte[] invoicePdfBytes) throws Exception {
+    private MimeMessage prepareMimeMessage(Booking booking, String rawMovieTitle, String safeMovieName, String htmlBody, byte[] qrCodeBytes, byte[] ticketPdfBytes, byte[] invoicePdfBytes) throws Exception {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
         helper.setFrom(senderEmail);
         helper.setTo(booking.getUser().getEmail());
-        helper.setSubject("🍿 Blockbuster Confirmed: " + rawMovieTitle);
-        helper.setText("Hi " + booking.getUser().getFullName() + ",\n\nYour seat is locked! Reference: " + booking.getReferenceCode(), false);
+        helper.setSubject("🍿 It's Showtime! Your movie ticket for " + rawMovieTitle + " is confirmed");
+
+        helper.setText(htmlBody, true);
+
+        helper.addInline("qrCodeImage", new ByteArrayResource(qrCodeBytes), "image/png");
+
         helper.addAttachment(safeMovieName + "_Ticket.pdf", new ByteArrayResource(ticketPdfBytes));
         helper.addAttachment(safeMovieName + "_Invoice.pdf", new ByteArrayResource(invoicePdfBytes));
+
         return message;
     }
 
