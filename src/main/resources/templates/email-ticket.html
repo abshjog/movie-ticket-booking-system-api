@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation</title>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #0a0a0a; font-family: Arial, sans-serif; color: #ffffff;">
+
+<table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #121212; border-radius: 12px; overflow: hidden; border: 1px solid #222;">
+
+    <tr>
+        <td style="padding: 30px; text-align: center; border-bottom: 1px solid #222;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 2px; color: #e50914; text-transform: uppercase;" th:text="${companyName}">CINEPASS</h1>
+            <p style="margin: 5px 0 0 0; font-size: 10px; color: #888; letter-spacing: 4px; text-transform: uppercase;">DIGITAL TICKET</p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 20px 30px 10px 30px;">
+            <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Booking confirmed, <span th:text="${customerName}">User</span>!</h2>
+            <p style="margin: 0; font-size: 13px; color: #aaa;">Booking Date: <span th:text="${bookingDate}">Date</span> <br/> Order ID: <span th:text="${orderId}">ID</span></p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 20px 30px;">
+            <h3 style="margin: 0 0 5px 0; font-size: 24px;" th:text="${movieTitle}">Movie Name</h3>
+            <p style="margin: 0; font-size: 14px; color: #bbb;">
+                <span style="border: 1px solid #555; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-right: 8px;" th:text="'(' + ${certificate} + ')'">(UA)</span>
+                <span th:text="${format}">Hindi 2D</span>
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 0 30px;">
+            <table role="presentation" style="width: 100%; background-color: #1a1a1a; border-radius: 12px; padding: 20px;">
+                <tr>
+                    <td style="text-align: center; padding-bottom: 20px; border-bottom: 1px dashed #333;">
+                        <div style="background: #fff; padding: 10px; display: inline-block; border-radius: 8px; margin-bottom: 15px;">
+                            <img src="cid:qrCodeImage" alt="QR Code" width="180" height="180" style="display: block; border: 0;"/>
+                        </div>
+                        <p style="margin: 0; font-size: 12px; color: #aaa;">Booking ID</p>
+                        <h4 style="margin: 5px 0 0 0; font-size: 22px; letter-spacing: 2px; color: #fff;" th:text="${bookingId}">ID</h4>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 20px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #aaa;">Date & Time</p>
+                        <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: bold; color: #fff;"><span th:text="${showDate}">Date</span> | <span th:text="${showTime}">Time</span></p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 30px;">
+            <table role="presentation" style="width: 100%;">
+                <tr>
+                    <td style="padding-bottom: 15px;">
+                        <p style="margin: 0; font-size: 12px; color: #aaa;">Theatre</p>
+                        <p style="margin: 5px 0 0 0; font-size: 15px; font-weight: bold;" th:text="${theaterName}">Venue Name</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom: 15px;">
+                        <p style="margin: 0; font-size: 12px; color: #aaa;">Screen</p>
+                        <p style="margin: 5px 0 0 0; font-size: 15px; font-weight: bold;" th:text="${screenName}">Audi</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p style="margin: 0; font-size: 12px; color: #aaa;">Seats</p>
+                        <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #e50914;" th:text="${seats}">Seats</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 0 30px 30px 30px;">
+            <h3 style="margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #222; padding-bottom: 10px;">Bill Summary</h3>
+            <table role="presentation" style="width: 100%; font-size: 14px;">
+                <tr>
+                    <td style="padding: 5px 0; color: #aaa;">Tickets</td>
+                    <td style="padding: 5px 0; text-align: right;" th:text="${ticketTotal}">₹0.00</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #aaa;">Taxes & Fees</td>
+                    <td style="padding: 5px 0; text-align: right;" th:text="${taxes}">₹0.00</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px 0 5px 0; font-weight: bold; color: #fff; border-top: 1px dashed #333;">Total Amount Paid</td>
+                    <td style="padding: 15px 0 5px 0; text-align: right; font-weight: bold; color: #fff; border-top: 1px dashed #333;" th:text="${totalAmount}">₹0.00</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 0 30px 30px 30px;">
+            <table role="presentation" style="width: 100%; background-color: #1a1a1a; border-radius: 8px; padding: 15px; font-size: 13px;">
+                <tr>
+                    <td style="color: #aaa;">Payment Method</td>
+                    <td style="text-align: right; color: #fff;" th:text="${paymentMethod}">Online</td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 5px; color: #aaa;">Transaction ID</td>
+                    <td style="padding-top: 5px; text-align: right; color: #fff;" th:text="${transactionId}">TXN_ID</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 20px 30px; background-color: #0a0a0a; border-top: 1px solid #222; font-size: 12px; color: #777; line-height: 1.5;">
+            <h4 style="margin: 0 0 10px 0; color: #aaa;">Important Notes</h4>
+            <ul style="margin: 0; padding-left: 15px;">
+                <li style="margin-bottom: 5px;">Tickets cannot be exchanged or refunded unless permitted by cinema policy.</li>
+                <li style="margin-bottom: 5px;">Please collect physical tickets from the Box Office or enter by scanning the QR code above.</li>
+                <li>As per cinema policy, children above the age of 3 require a separate ticket.</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
