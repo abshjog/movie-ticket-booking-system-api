@@ -27,7 +27,6 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieResponse fetchMovie(String movieId) {
-        // Step 1: Fetch with Optional handling
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException("Movie not found with ID: " + movieId));
 
@@ -45,6 +44,16 @@ public class MovieServiceImpl implements MovieService {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Movie> moviePage = movieRepository.findByTitleContainingIgnoreCase(search, pageable);
+
+        return new ArrayList<>(movieMapper.movieResponseMapper(moviePage.getContent()));
+    }
+
+    @Override
+    public List<MovieResponse> fetchAllMovies(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Movie> moviePage = movieRepository.findAll(pageable);
+
+        if (moviePage.isEmpty()) return Collections.emptyList();
 
         return new ArrayList<>(movieMapper.movieResponseMapper(moviePage.getContent()));
     }

@@ -20,6 +20,9 @@ spring:
       ddl-auto: update
       jdbc:
         time_zone: UTC
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
 
   # Mail Configuration (Gmail SMTP)
   mail:

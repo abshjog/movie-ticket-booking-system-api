@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -233,5 +234,17 @@ public class BookingServiceImpl implements BookingService {
 
         notificationService.sendBookingConfirmation(booking);
         log.info("Ticket resend triggered for Reference: {}", booking.getReferenceCode());
+    }
+
+    @Override
+    public List<BookingResponse> getMyBookings(String email) {
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        List<Booking> myBookings = bookingRepository.findByUser_EmailOrderByCreatedAtDesc(email);
+
+        return myBookings.stream()
+                .map(bookingMapper::mapToResponse)
+                .collect(Collectors.toList());
     }
 }

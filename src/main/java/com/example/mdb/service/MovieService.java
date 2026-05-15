@@ -10,4 +10,6 @@ public interface MovieService {
     MovieResponse fetchMovie(String movieId);
 
     List<MovieResponse> searchMovies(String search, int page, int size);
+
+    List<MovieResponse> fetchAllMovies(int page, int size);
 }
