@@ -30,4 +30,20 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     List<String> findBookedSeatIdsByShowId(@Param("showId") String showId);
 
     List<Booking> findByUser_EmailOrderByCreatedAtDesc(String email);
+
+    // --- DASHBOARD QUERIES (THEATER OWNER) ---
+    @Query("SELECT SUM(b.baseAmount) FROM Booking b " +
+            "WHERE b.show.theater.theaterOwner.email = :ownerEmail " +
+            "AND b.bookingStatus = com.example.mdb.enums.BookingStatus.CONFIRMED")
+    Double calculateTotalBaseRevenueByOwner(@Param("ownerEmail") String ownerEmail);
+
+    @Query("SELECT COUNT(s) FROM Booking b JOIN b.seats s " +
+            "WHERE b.show.theater.theaterOwner.email = :ownerEmail " +
+            "AND b.bookingStatus = com.example.mdb.enums.BookingStatus.CONFIRMED")
+    long countTotalTicketsSoldByOwner(@Param("ownerEmail") String ownerEmail);
+
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.show.theater.theaterOwner.email = :ownerEmail " +
+            "ORDER BY b.createdAt DESC")
+    List<Booking> findTopRecentBookingsByOwner(@Param("ownerEmail") String ownerEmail);
 }
