@@ -28,4 +28,6 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             "WHERE b.show.showId = :showId " +
             "AND b.bookingStatus IN (com.example.mdb.enums.BookingStatus.CONFIRMED, com.example.mdb.enums.BookingStatus.PENDING)")
     List<String> findBookedSeatIdsByShowId(@Param("showId") String showId);
+
+    List<Booking> findByUser_EmailOrderByCreatedAtDesc(String email);
 }

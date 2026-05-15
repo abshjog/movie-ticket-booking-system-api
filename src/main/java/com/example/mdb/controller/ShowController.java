@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @Validated
+@CrossOrigin(origins = "*")
 @RequestMapping("/shows")
 public class ShowController {
 
@@ -39,7 +40,8 @@ public class ShowController {
     public ResponseEntity<ResponseStructure<Page<TheaterShowProjection>>> fetchShows(
             @PathVariable String movieId,
             @ModelAttribute MovieShowsRequest showsRequest,
-            @RequestHeader(value = "X-City", required = false) String city) {
+            @RequestHeader(value = "X-City", required = false, defaultValue = "Bhopal") String city) {
+
         Page<TheaterShowProjection> shows  = showService.fetchShows(movieId, showsRequest, city);
         return responseBuilder.success(HttpStatus.OK, "Fetched Successfully", shows);
     }

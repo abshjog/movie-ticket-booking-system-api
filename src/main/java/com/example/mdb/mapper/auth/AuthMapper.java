@@ -12,6 +12,7 @@ public class AuthMapper {
 
         return AuthResponse.builder()
                 .userId(userDetails.getUserId())
+                .fullName(userDetails.getFullName())
                 .username(userDetails.getUsername())
                 .email(userDetails.getEmail())
                 .role(userDetails.getUserRole().toString())

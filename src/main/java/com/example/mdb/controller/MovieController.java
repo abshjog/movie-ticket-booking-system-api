@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/movies")
+@CrossOrigin(origins = "*")
 public class MovieController {
 
     private final MovieService movieService;
@@ -32,5 +33,13 @@ public class MovieController {
             @RequestParam(defaultValue = "10") int size) {
         List<MovieResponse> movieResponses = movieService.searchMovies(search, page, size);
         return responseBuilder.success(HttpStatus.OK, "Movies fetched Successfully", movieResponses);
+    }
+
+    @GetMapping
+    public ResponseEntity<ResponseStructure<List<MovieResponse>>> fetchAllMovies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<MovieResponse> movieResponses = movieService.fetchAllMovies(page, size);
+        return responseBuilder.success(HttpStatus.OK, "All movies fetched successfully", movieResponses);
     }
 }

@@ -31,6 +31,10 @@ public class BookingMapper {
                         booking.getShow().getStartsAt(),
                         ZoneId.of("Asia/Kolkata")
                 ))
+                .bookedAt(booking.getCreatedAt() != null ? LocalDateTime.ofInstant(
+                        booking.getCreatedAt(),
+                        ZoneId.of("Asia/Kolkata")
+                ) : null)
                 .seatNames(booking.getSeats().stream()
                         .map(Seat::getName)
                         .sorted()

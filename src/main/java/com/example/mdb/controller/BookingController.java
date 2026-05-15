@@ -2,7 +2,6 @@ package com.example.mdb.controller;
 
 import com.example.mdb.dto.BookingRequest;
 import com.example.mdb.dto.BookingResponse;
-import com.example.mdb.entity.UserDetails;
 import com.example.mdb.service.BookingService;
 import com.example.mdb.utility.ResponseStructure;
 import com.example.mdb.utility.RestResponseBuilder;
@@ -12,12 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/bookings")
+@CrossOrigin(origins = "*")
 public class BookingController {
 
     private final BookingService bookingService;
@@ -52,5 +53,13 @@ public class BookingController {
             Authentication auth) {
         bookingService.resendTicket(bookingId, auth.getName());
         return ResponseStructure.success(HttpStatus.OK, "Ticket resent successfully to your registered email.", "Dispatched");
+    }
+
+    @GetMapping("/my-bookings")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<ResponseStructure<List<BookingResponse>>> getMyBookings(Authentication auth) {
+        String email = auth.getName();
+        List<BookingResponse> responses = bookingService.getMyBookings(email);
+        return responseBuilder.success(HttpStatus.OK, "Booking history fetched successfully", responses);
     }
 }
