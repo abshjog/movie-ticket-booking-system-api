@@ -15,6 +15,8 @@ public class AuthMapper {
                 .fullName(userDetails.getFullName())
                 .username(userDetails.getUsername())
                 .email(userDetails.getEmail())
+                .phoneNumber(userDetails.getPhoneNumber())
+                .dateOfBirth(userDetails.getDateOfBirth())
                 .role(userDetails.getUserRole().toString())
                 .accessExpiration(access.expiration().toEpochMilli())
                 .refreshExpiration(refresh.expiration().toEpochMilli())
