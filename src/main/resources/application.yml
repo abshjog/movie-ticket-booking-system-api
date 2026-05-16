@@ -45,8 +45,12 @@ app:
 
   token:
     secret: "${TOKEN_SECRET:xEZeHOjDYg2qcL0T4Wll6vxyhChpCN8uvqLMhJ5Fi+8=}" #Only for testing and development mode
-    access-duration: "${TOKEN_ACCESS_DURATION:5}" #in minutes
-    refresh-duration: "${TOKEN_REFRESH_DURATION:1440}" #in minutes 24*60
+
+    #Access Token valid for 7 Days (7 * 24 * 60 = 10080 minutes)
+    access-duration: "${TOKEN_ACCESS_DURATION:10080}"
+
+    # Refresh Token valid for 30 Days (30 * 24 * 60 = 43200 minutes)
+    refresh-duration: "${TOKEN_REFRESH_DURATION:43200}"
 
 #Context-path
 server:

@@ -20,5 +20,6 @@ public record BookingResponse(
         LocalDateTime startsAt,
         LocalDateTime bookedAt,
         List<String> seatNames,
-        String razorpayRefundId
+        String razorpayRefundId,
+        String qrCodeBase64
 ) {}
