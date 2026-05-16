@@ -68,6 +68,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getFullName(),
                 user.getUsername(),
                 tokenDetails.email(),
+                user.getPhoneNumber(),
+                user.getDateOfBirth(),
                 tokenDetails.role(),
                 access.expiration().toEpochMilli(),
                 tokenDetails.tokenExpiration().toEpochMilli(),
