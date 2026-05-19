@@ -4,6 +4,8 @@ import com.example.mdb.dto.TheaterRequest;
 import com.example.mdb.dto.TheaterResponse;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 public interface TheaterService {
 
 
@@ -12,4 +14,6 @@ public interface TheaterService {
     TheaterResponse findTheater(String theaterId);
 
     TheaterResponse updateTheater(String theaterId, @Valid TheaterRequest theaterRequest);
+
+    List<TheaterResponse> getMyTheaters(String name);
 }

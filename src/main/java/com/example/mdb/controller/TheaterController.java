@@ -13,9 +13,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RestController
 @RequestMapping("/theaters")
+@CrossOrigin(origins = "*")
 public class TheaterController {
 
     private final TheaterService theaterService;
@@ -40,5 +43,12 @@ public class TheaterController {
     public ResponseEntity<ResponseStructure<TheaterResponse>> updateTheater(@PathVariable String theaterId, @Valid @RequestBody TheaterRequest theaterRequest){
         TheaterResponse theaterResponse = theaterService.updateTheater(theaterId, theaterRequest);
         return responseBuilder.success(HttpStatus.OK, "Theater updated successfully", theaterResponse);
+    }
+
+    @GetMapping("/my-theaters")
+    @PreAuthorize("hasAuthority('THEATER_OWNER')")
+    public ResponseEntity<ResponseStructure<List<TheaterResponse>>> getMyTheaters(Authentication auth) {
+        List<TheaterResponse> responses = theaterService.getMyTheaters(auth.getName());
+        return responseBuilder.success(HttpStatus.OK, "Owner properties retrieved successfully", responses);
     }
 }
