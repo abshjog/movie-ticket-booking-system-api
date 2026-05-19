@@ -25,7 +25,7 @@ public class BookingController {
     private final RestResponseBuilder responseBuilder;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<BookingResponse>> createBooking(
             @Valid @RequestBody BookingRequest bookingRequest,
             Authentication auth) {
@@ -36,7 +36,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}/cancel")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<BookingResponse>> cancelBooking(
             @PathVariable String bookingId,
             Authentication auth) {
@@ -47,7 +47,7 @@ public class BookingController {
     }
 
     @PostMapping("/{bookingId}/resend-ticket")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<String>> resendTicket(
             @PathVariable String bookingId,
             Authentication auth) {
@@ -56,7 +56,7 @@ public class BookingController {
     }
 
     @GetMapping("/my-bookings")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<List<BookingResponse>>> getMyBookings(Authentication auth) {
         String email = auth.getName();
         List<BookingResponse> responses = bookingService.getMyBookings(email);

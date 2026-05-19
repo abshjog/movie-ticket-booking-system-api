@@ -14,6 +14,9 @@ import com.example.mdb.service.TheaterService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @AllArgsConstructor
 public class TheaterServiceImpl implements TheaterService {
@@ -58,5 +61,13 @@ public class TheaterServiceImpl implements TheaterService {
 
         theater = theaterRepository.save(theater);
         return theaterMapper.theaterResponseMapper(theater);
+    }
+
+    @Override
+    public List<TheaterResponse> getMyTheaters(String email) {
+        List<Theater> myTheaters = theaterRepository.findByTheaterOwner_Email(email);
+        return myTheaters.stream()
+                .map(theaterMapper::theaterResponseMapper)
+                .collect(Collectors.toList());
     }
 }
