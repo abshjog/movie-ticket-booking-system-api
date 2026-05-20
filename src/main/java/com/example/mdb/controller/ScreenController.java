@@ -12,9 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/theaters/{theaterId}/screens")
+@CrossOrigin(origins = "*")
 public class ScreenController {
 
     private final ScreenService screenService;
@@ -35,5 +38,12 @@ public class ScreenController {
             @PathVariable String screenId) {
         ScreenResponse screenResponse = screenService.findScreen(theaterId, screenId);
         return responseBuilder.success(HttpStatus.OK, "Screen has been successfully fetched", screenResponse);
+    }
+
+    @GetMapping
+    public ResponseEntity<ResponseStructure<List<ScreenResponse>>> getScreensByTheater(
+            @PathVariable String theaterId) {
+        List<ScreenResponse> responses = screenService.getScreensByTheater(theaterId);
+        return responseBuilder.success(HttpStatus.OK, "Screens retrieved successfully", responses);
     }
 }

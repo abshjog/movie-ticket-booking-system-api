@@ -79,4 +79,16 @@ public class ScreenServiceImpl implements ScreenService {
         }
         return seats;
     }
+
+    @Override
+    public List<ScreenResponse> getScreensByTheater(String theaterId) {
+        if(!theaterRepository.existsById(theaterId)) {
+            throw new TheaterNotFoundException("Theater not found with ID: " + theaterId);
+        }
+
+        List<Screen> screens = screenRepository.findByTheater_TheaterId(theaterId);
+        return screens.stream()
+                .map(screenMapper::screenResponseMapper)
+                .toList();
+    }
 }
