@@ -18,4 +18,6 @@ public interface UserService {
     UserResponse softDeleteUser(String userId, String authenticatedEmail);
 
     void changePassword(String userId, @Valid ChangePasswordRequest request, String authenticatedEmail);
+
+    UserResponse getMyProfile(String name);
 }

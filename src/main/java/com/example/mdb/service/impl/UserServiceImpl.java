@@ -47,6 +47,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse getMyProfile(String authenticatedEmail) {
+        log.info("Fetching profile details for logged-in user: {}", authenticatedEmail);
+
+        UserDetails user = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + authenticatedEmail));
+
+        return userMapper.userResponseMapper(user);
+    }
+
+    @Override
     public UserResponse updateUser(String userId, UserUpdationRequest userRequest, String authenticatedEmail) {
         log.info("Editing user with ID: {}", userId);
 
@@ -137,9 +147,3 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(userEntity);
     }
 }
-
-
-//1. User sends registration data → captured in `UserRegistrationRequest` (DTO)
-//2. Service layer uses `copy()` to map DTO → Entity (`UserDetails`)
-//3. Entity saved in DB.
-//4. When sending response back → Entity converted to `UserResponse` via `UserMapper`

@@ -34,6 +34,13 @@ public class UserController {
         return restResponseBuilder.success(HttpStatus.OK, "Users fetched successfully", users);
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER', 'ADMIN')")
+    public ResponseEntity<ResponseStructure<UserResponse>> getMyProfile(Authentication auth) {
+        UserResponse userDetails = userService.getMyProfile(auth.getName());
+        return restResponseBuilder.success(HttpStatus.OK, "Profile fetched successfully", userDetails);
+    }
+
     @PutMapping("/{userId}")
     @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
     public ResponseEntity<ResponseStructure<UserResponse>> updateUser(
