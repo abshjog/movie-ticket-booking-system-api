@@ -40,40 +40,35 @@ public class AuthFilter extends OncePerRequestFilter {
 
             try {
                 var extractedToken = jwtService.parseToken(token);
-                if (extractedToken == null) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
 
-                Claims claims = extractedToken.claims();
-                JwsHeader headers = extractedToken.headers();
+                if (extractedToken != null) {
+                    Claims claims = extractedToken.claims();
+                    JwsHeader headers = extractedToken.headers();
 
-                boolean correctType = Optional.ofNullable(headers)
-                        .map(h -> (String) h.get("type"))
-                        .map(String::toUpperCase)
-                        .map(TokenType::valueOf)
-                        .map(t -> t.equals(tokenType))
-                        .orElse(false);
+                    boolean correctType = Optional.ofNullable(headers)
+                            .map(h -> (String) h.get("type"))
+                            .map(String::toUpperCase)
+                            .map(TokenType::valueOf)
+                            .map(t -> t.equals(tokenType))
+                            .orElse(false);
 
-                if (!correctType || claims == null) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
+                    if (correctType && claims != null) {
+                        String role = claims.get("role", String.class);
+                        String email = claims.getSubject();
 
-                String role = claims.get("role", String.class);
-                String email = claims.getSubject();
+                        if (isValid(role) && isValid(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                            var authorities = List.of(new SimpleGrantedAuthority(role));
+                            var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
+                            authToken.setDetails(request);
 
-                if (isValid(role) && isValid(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    var authorities = List.of(new SimpleGrantedAuthority(role));
-                    var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
-                    authToken.setDetails(request);
+                            SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                            AuthenticatedTokenDetails tokenDetails = new AuthenticatedTokenDetails(
+                                    email, role, claims.getExpiration().toInstant(), token);
 
-                    AuthenticatedTokenDetails tokenDetails = new AuthenticatedTokenDetails(
-                            email, role, claims.getExpiration().toInstant(), token);
-
-                    request.setAttribute("tokenDetails", tokenDetails);
+                            request.setAttribute("tokenDetails", tokenDetails);
+                        }
+                    }
                 }
             } catch (ExpiredJwtException e) {
                 log.error("JWT Expired: {}", e.getMessage());
