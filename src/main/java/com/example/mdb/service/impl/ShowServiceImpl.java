@@ -64,7 +64,7 @@ public class ShowServiceImpl implements ShowService {
         show.setTicketPrice(showRequest.ticketPrice());
 
         Show savedShow = showRepository.save(show);
-        
+
         List<ShowSeat> showSeats = screen.getSeats().stream().map(seat -> {
             ShowSeat ss = new ShowSeat();
             ss.setShow(savedShow);
@@ -77,12 +77,17 @@ public class ShowServiceImpl implements ShowService {
         return showMapper.showResponseMapper(savedShow);
     }
 
-
     @Override
     public Page<TheaterShowProjection> fetchShows(String movieId, MovieShowsRequest showsRequest, String city) {
-        ZoneId zoneId = (showsRequest.zoneId() == null || showsRequest.zoneId().isBlank())
-                ? ZoneId.of("UTC")
-                : ZoneId.of(ZoneId.SHORT_IDS.getOrDefault(showsRequest.zoneId().toUpperCase(), "UTC"));
+
+        ZoneId zoneId;
+        try {
+            zoneId = (showsRequest.zoneId() == null || showsRequest.zoneId().isBlank())
+                    ? ZoneId.of("Asia/Kolkata")
+                    : ZoneId.of(showsRequest.zoneId());
+        } catch (Exception e) {
+            zoneId = ZoneId.of("Asia/Kolkata");
+        }
 
         if (city == null || city.isBlank()) {
             throw new CityNotFoundException("No city found by name");
@@ -91,7 +96,8 @@ public class ShowServiceImpl implements ShowService {
         Instant start = showsRequest.date().atStartOfDay(zoneId).toInstant();
         Instant end = showsRequest.date().plusDays(1).atStartOfDay(zoneId).minusNanos(1).toInstant();
 
-        Pageable pageable = PageRequest.of(showsRequest.page() - 1, showsRequest.size());
+        int pageIndex = Math.max(0, showsRequest.page() - 1);
+        Pageable pageable = PageRequest.of(pageIndex, showsRequest.size());
 
         Page<String> theaterIdsPage = showRepository.findTheaterIdsWithMatchingShowsAndCity(
                 movieId, start, end, showsRequest.screenType(), city, pageable
@@ -134,7 +140,6 @@ public class ShowServiceImpl implements ShowService {
 
     @Override
     public List<SeatStatusResponse> getSeatAvailability(String showId) {
-        // First check if show exists
         if(!showRepository.existsById(showId)) throw new RuntimeException("Show not found");
 
         return showSeatRepository.findByShowShowIdOrderBySeatNameAsc(showId).stream()
