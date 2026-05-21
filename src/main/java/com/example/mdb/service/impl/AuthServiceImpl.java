@@ -78,17 +78,22 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
-    private TokenPayLoad tokenGenerator(UserDetails userDetails, int minutesForExpiration, TokenType tokenType){
+    private TokenPayLoad tokenGenerator(UserDetails userDetails, long expirationValue, TokenType tokenType){
         Map<String, Object> claims = new HashMap<>();
 
-        String role = userDetails.getUserRole().toString();
+        String role = userDetails.getUserRole().name();
         claims.put("role", role);
+
+        long addMillis = expirationValue;
+        if (expirationValue < 100000L) {
+            addMillis = expirationValue * 60L * 1000L;
+        }
 
         return new TokenPayLoad(
                 claims,
                 userDetails.getEmail(),
                 Instant.now(),
-                Instant.now().plusSeconds(minutesForExpiration* 60L),
+                Instant.now().plusMillis(addMillis),
                 tokenType
         );
     }

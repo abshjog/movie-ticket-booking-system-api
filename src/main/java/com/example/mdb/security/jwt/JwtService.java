@@ -29,24 +29,16 @@ public class JwtService {
                 .compact();
     }
 
-    public ExtractedToken parseToken (String token){
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(getSignatureKey())
-                    .build()
-                    .parseClaimsJws(token);
+    public ExtractedToken parseToken(String token) throws JwtException {
+        Jws<Claims> claimsJws = Jwts.parserBuilder()
+                .setSigningKey(getSignatureKey())
+                .build()
+                .parseClaimsJws(token);
 
-            JwsHeader header = claimsJws.getHeader();
+        JwsHeader header = claimsJws.getHeader();
+        Claims claimsBody = claimsJws.getBody();
 
-            Claims claimsBody = claimsJws.getBody();
-
-            ExtractedToken extractedToken = new ExtractedToken(header, claimsBody);
-
-            return extractedToken;
-        } catch (JwtException e) {
-            log.warn("Failed to parse token, returning null..", e);
-            return null;
-        }
+        return new ExtractedToken(header, claimsBody);
     }
 
     private Key getSignatureKey() {
