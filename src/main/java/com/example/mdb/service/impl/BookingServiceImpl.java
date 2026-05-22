@@ -12,16 +12,25 @@ import com.example.mdb.service.BookingService;
 import com.example.mdb.service.NotificationService;
 import com.example.mdb.service.PaymentService;
 import com.example.mdb.utility.IdGenerator;
+import com.example.mdb.utility.QRCodeGenerator;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import com.example.mdb.mapper.BookingMapper;
 
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.xhtmlrenderer.pdf.ITextRenderer;
+
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -40,6 +49,9 @@ public class BookingServiceImpl implements BookingService {
     private final PaymentService paymentService;
     private final IdGenerator idGenerator;
     private final NotificationService notificationService;
+
+    private final TemplateEngine templateEngine;
+    private final QRCodeGenerator qrCodeGenerator;
 
     private static final int BOOKING_BUFFER_MINUTES = 5;
 
@@ -246,5 +258,59 @@ public class BookingServiceImpl implements BookingService {
         return myBookings.stream()
                 .map(bookingMapper::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public byte[] generateTicketPdf(String bookingId, String email) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found!"));
+
+        if (!booking.getUser().getEmail().equals(email)) {
+            throw new BookingNotAllowedException("Security Alert: You can only download tickets for your own bookings!");
+        }
+
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingNotAllowedException("Only confirmed bookings can be downloaded.");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy | hh:mm a")
+                .withZone(ZoneId.of("Asia/Kolkata"));
+        String formattedDateTime = formatter.format(booking.getShow().getStartsAt());
+
+        String dynamicScreenType = booking.getShow().getScreen().getScreenType().name()
+                .replace("TWO_D", "2D")
+                .replace("THREE_D", "3D")
+                .replace("FOUR_DX", "4DX")
+                .replace("_", " ");
+
+        Context context = new Context();
+        context.setVariable("companyName", "CINEPASS");
+        context.setVariable("movieTitle", booking.getShow().getMovie().getTitle());
+        context.setVariable("showDateTime", formattedDateTime);
+        context.setVariable("qrCode", qrCodeGenerator.generateQRCodeBase64(booking.getReferenceCode()));
+        context.setVariable("screenName", booking.getShow().getScreen().getName());
+        context.setVariable("screenType", dynamicScreenType); // Properly parsed screen string
+        context.setVariable("seats", booking.getSeats().stream().map(Seat::getName).collect(Collectors.joining(", ")));
+        context.setVariable("theaterName", booking.getShow().getScreen().getTheater().getName());
+        context.setVariable("theaterAddress", booking.getShow().getScreen().getTheater().getAddress());
+        context.setVariable("theaterCity", booking.getShow().getScreen().getTheater().getCity());
+        context.setVariable("bookingId", booking.getReferenceCode());
+
+        String htmlContent = templateEngine.process("m-ticket", context);
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            ITextRenderer renderer = new ITextRenderer();
+
+            String fontPath = new ClassPathResource("fonts/DejaVuSans-Bold.ttf").getURL().toString();
+            renderer.getFontResolver().addFont(fontPath, "Identity-H", true);
+
+            renderer.setDocumentFromString(htmlContent);
+            renderer.layout();
+            renderer.createPDF(outputStream);
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to generate PDF for booking {}: {}", bookingId, e.getMessage());
+            throw new RuntimeException("Failed to generate PDF ticket", e);
+        }
     }
 }
