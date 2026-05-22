@@ -7,7 +7,10 @@ import com.example.mdb.utility.ResponseStructure;
 import com.example.mdb.utility.RestResponseBuilder;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -61,5 +64,22 @@ public class BookingController {
         String email = auth.getName();
         List<BookingResponse> responses = bookingService.getMyBookings(email);
         return responseBuilder.success(HttpStatus.OK, "Booking history fetched successfully", responses);
+    }
+
+    @GetMapping(value = "/{bookingId}/download-ticket", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    public ResponseEntity<byte[]> downloadTicket(
+            @PathVariable String bookingId,
+            @RequestParam(name = "ref", defaultValue = "Ticket") String referenceCode,
+            Authentication auth) {
+
+        byte[] pdfBytes = bookingService.generateTicketPdf(bookingId, auth.getName());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+
+        headers.setContentDispositionFormData("attachment", referenceCode + ".pdf");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }

@@ -16,4 +16,6 @@ public interface BookingService {
     void resendTicket(String bookingId, String email);
 
     List<BookingResponse> getMyBookings(String email);
+
+    byte[] generateTicketPdf(String bookingId, String email);
 }
