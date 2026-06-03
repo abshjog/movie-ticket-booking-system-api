@@ -7,7 +7,6 @@ import com.example.mdb.utility.ResponseStructure;
 import com.example.mdb.utility.RestResponseBuilder;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,7 +27,7 @@ public class BookingController {
     private final RestResponseBuilder responseBuilder;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<ResponseStructure<BookingResponse>> createBooking(
             @Valid @RequestBody BookingRequest bookingRequest,
             Authentication auth) {
@@ -39,7 +38,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}/cancel")
-    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<ResponseStructure<BookingResponse>> cancelBooking(
             @PathVariable String bookingId,
             Authentication auth) {
@@ -50,7 +49,7 @@ public class BookingController {
     }
 
     @PostMapping("/{bookingId}/resend-ticket")
-    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<ResponseStructure<String>> resendTicket(
             @PathVariable String bookingId,
             Authentication auth) {
@@ -59,7 +58,7 @@ public class BookingController {
     }
 
     @GetMapping("/my-bookings")
-    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<ResponseStructure<List<BookingResponse>>> getMyBookings(Authentication auth) {
         String email = auth.getName();
         List<BookingResponse> responses = bookingService.getMyBookings(email);
@@ -67,7 +66,7 @@ public class BookingController {
     }
 
     @GetMapping(value = "/{bookingId}/download-ticket", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyAuthority('USER', 'THEATER_OWNER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<byte[]> downloadTicket(
             @PathVariable String bookingId,
             @RequestParam(name = "ref", defaultValue = "Ticket") String referenceCode,

@@ -49,7 +49,6 @@ public class ShowServiceImpl implements ShowService {
 
         Instant end = start.plus(movie.getRuntime());
 
-        // Overlap Check Logic
         boolean overlap = screen.getShows().stream().anyMatch(s ->
                 !(end.isBefore(s.getStartsAt()) || start.isAfter(s.getEndsAt()))
         );
@@ -143,6 +142,18 @@ public class ShowServiceImpl implements ShowService {
         if(!showRepository.existsById(showId)) throw new RuntimeException("Show not found");
 
         return showSeatRepository.findByShowShowIdOrderBySeatNameAsc(showId).stream()
+                .sorted((ss1, ss2) -> {
+                    String name1 = ss1.getSeat().getName();
+                    String name2 = ss2.getSeat().getName();
+                    String row1 = name1.replaceAll("[\\d]", "");
+                    String row2 = name2.replaceAll("[\\d]", "");
+                    int rowCompare = row1.compareTo(row2);
+                    if (rowCompare != 0) return rowCompare;
+
+                    int num1 = Integer.parseInt(name1.replaceAll("[\\D]", ""));
+                    int num2 = Integer.parseInt(name2.replaceAll("[\\D]", ""));
+                    return Integer.compare(num1, num2);
+                })
                 .map(ss -> SeatStatusResponse.builder()
                         .seatId(ss.getSeat().getSeatId())
                         .seatName(ss.getSeat().getName())

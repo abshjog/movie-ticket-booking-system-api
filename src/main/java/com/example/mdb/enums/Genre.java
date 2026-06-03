@@ -8,5 +8,6 @@ public enum Genre {
     HORROR,
     THRILLER,
     MYSTERY,
-    DOCUMENTARY
+    DRAMA,
+    HISTORY
 }

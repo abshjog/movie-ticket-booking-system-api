@@ -106,7 +106,18 @@ public class BookingServiceImpl implements BookingService {
 
         List<Seat> sortedSeats = selectedShowSeats.stream()
                 .map(ShowSeat::getSeat)
-                .sorted(Comparator.comparing(Seat::getName))
+                .sorted((seat1, seat2) -> {
+                    String name1 = seat1.getName();
+                    String name2 = seat2.getName();
+                    String row1 = name1.replaceAll("[\\d]", "");
+                    String row2 = name2.replaceAll("[\\d]", "");
+                    int rowCompare = row1.compareTo(row2);
+                    if (rowCompare != 0) return rowCompare;
+
+                    int num1 = Integer.parseInt(name1.replaceAll("[\\D]", ""));
+                    int num2 = Integer.parseInt(name2.replaceAll("[\\D]", ""));
+                    return Integer.compare(num1, num2);
+                })
                 .toList();
 
         booking.setSeats(sortedSeats);
@@ -277,11 +288,7 @@ public class BookingServiceImpl implements BookingService {
                 .withZone(ZoneId.of("Asia/Kolkata"));
         String formattedDateTime = formatter.format(booking.getShow().getStartsAt());
 
-        String dynamicScreenType = booking.getShow().getScreen().getScreenType().name()
-                .replace("TWO_D", "2D")
-                .replace("THREE_D", "3D")
-                .replace("FOUR_DX", "4DX")
-                .replace("_", " ");
+        String dynamicScreenType = booking.getShow().getScreen().getScreenType().getDisplayName();
 
         Context context = new Context();
         context.setVariable("companyName", "CINEPASS");
@@ -289,7 +296,7 @@ public class BookingServiceImpl implements BookingService {
         context.setVariable("showDateTime", formattedDateTime);
         context.setVariable("qrCode", qrCodeGenerator.generateQRCodeBase64(booking.getReferenceCode()));
         context.setVariable("screenName", booking.getShow().getScreen().getName());
-        context.setVariable("screenType", dynamicScreenType); // Properly parsed screen string
+        context.setVariable("screenType", dynamicScreenType);
         context.setVariable("seats", booking.getSeats().stream().map(Seat::getName).collect(Collectors.joining(", ")));
         context.setVariable("theaterName", booking.getShow().getScreen().getTheater().getName());
         context.setVariable("theaterAddress", booking.getShow().getScreen().getTheater().getAddress());
