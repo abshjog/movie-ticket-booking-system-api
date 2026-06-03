@@ -26,11 +26,18 @@ public record UserUpdationRequest(
         String email,
 
         @NotNull
-        @Pattern(regexp = "[6-9]\\d{9}$",
-                message = "Phone number must be a valid 10-digit Indian number starting with 6–9.")
+        @Pattern(regexp = "^[6-9]\\d{9}$",
+                message = "Phone number must be a valid 10-digit Indian mobile number")
         String phoneNumber,
 
         @NotNull
         @Past(message = "Date of birth must be a past date")
-        LocalDate dateOfBirth
+        LocalDate dateOfBirth,
+
+        @NotNull(message = "Gender must not be null")
+        @Pattern(
+                regexp = "^(Male|Female|Others|Prefer not to say)$",
+                message = "Gender must be 'Male', 'Female', 'Others', or 'Prefer not to say'"
+        )
+        String gender
 ) {}

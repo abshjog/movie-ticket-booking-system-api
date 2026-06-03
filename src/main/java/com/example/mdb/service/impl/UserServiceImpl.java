@@ -127,23 +127,25 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDetails copy(UserDetails userEntity, UserRegistrationRequest request) {
-        userEntity.setFullName(request.fullName()); // 👇 Mapping FullName
+        userEntity.setFullName(request.fullName());
         userEntity.setUserRole(request.userRole());
         userEntity.setPassword(passwordEncoder.encode(request.password()));
         userEntity.setEmail(request.email());
         userEntity.setDateOfBirth(request.dateOfBirth());
         userEntity.setPhoneNumber(request.phoneNumber());
+        userEntity.setGender(request.gender());
         userEntity.setUsername(request.username());
         userEntity.setDeleted(false);
         return userRepository.save(userEntity);
     }
 
     private UserDetails copy(UserDetails userEntity, UserUpdationRequest request) {
-        userEntity.setFullName(request.fullName()); // 👇 Mapping FullName
+        userEntity.setFullName(request.fullName());
         userEntity.setDateOfBirth(request.dateOfBirth());
-        userEntity.setPhoneNumber(request.phoneNumber());
+        userEntity.setGender(request.gender());
         userEntity.setEmail(request.email());
         userEntity.setUsername(request.username());
+
         return userRepository.save(userEntity);
     }
 }

@@ -44,5 +44,12 @@ public record UserRegistrationRequest(
 
         @NotNull(message = "Date of birth must not be null")
         @Past(message = "Date of birth must be a past date")
-        LocalDate dateOfBirth
+        LocalDate dateOfBirth,
+
+        @NotBlank(message = "Gender must not be blank")
+        @Pattern(
+                regexp = "^(Male|Female|Others|Prefer not to say)$",
+                message = "Gender must be 'Male', 'Female', 'Others', or 'Prefer not to say'"
+        )
+        String gender
 ) {}
