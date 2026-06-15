@@ -2,6 +2,7 @@ package com.example.mdb.service.impl;
 
 import com.example.mdb.entity.Booking;
 import com.example.mdb.entity.Seat;
+import com.example.mdb.enums.SeatCategory;
 import com.example.mdb.service.NotificationService;
 import com.example.mdb.utility.QRCodeGenerator;
 import com.lowagie.text.pdf.BaseFont;
@@ -25,6 +26,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${app.company.name:CINEPASS}")
     private String companyName;
 
+    private String getSeatPrefix(SeatCategory category) {
+        if (category == null) return "";
+        return switch (category) {
+            case VIP -> "VIP - ";
+            case PREMIUM -> "PR - ";
+            case EXECUTIVE -> "EX - ";
+            case NORMAL -> "NR - ";
+        };
+    }
+
     @Async
     @Override
     public void sendBookingConfirmation(Booking booking) {
@@ -57,7 +69,13 @@ public class NotificationServiceImpl implements NotificationService {
             String invoiceOrdinalDate = getOrdinalDate(LocalDate.now(indiaZone));
 
             String seats = (booking.getSeats() != null && !booking.getSeats().isEmpty())
-                    ? booking.getSeats().stream().map(Seat::getName).collect(Collectors.joining(", "))
+                    ? booking.getSeats().stream()
+                    .collect(Collectors.groupingBy(Seat::getSeatCategory, TreeMap::new, Collectors.toList()))
+                    .entrySet().stream()
+                    .map(entry -> getSeatPrefix(entry.getKey()) + entry.getValue().stream()
+                            .map(Seat::getName)
+                            .collect(Collectors.joining(", ")))
+                    .collect(Collectors.joining(" | "))
                     : "Unassigned";
 
             byte[] qrCodeBytes = qrCodeGenerator.generateQRCodeImage(booking.getReferenceCode());
@@ -134,7 +152,7 @@ public class NotificationServiceImpl implements NotificationService {
             emailCtx.setVariable("showTime", emailTime);
             emailCtx.setVariable("theaterName", booking.getShow().getTheater().getName() + ", " + booking.getShow().getTheater().getCity());
             emailCtx.setVariable("screenName", booking.getShow().getScreen().getName());
-            emailCtx.setVariable("seats", seats);
+            emailCtx.setVariable("seats", seats); // Grouped string is injected here natively
             emailCtx.setVariable("ticketTotal", String.format("₹%.2f", ticketBaseAmount));
             emailCtx.setVariable("taxes", String.format("₹%.2f", taxAmount));
             emailCtx.setVariable("totalAmount", String.format("₹%.2f", grandTotal));

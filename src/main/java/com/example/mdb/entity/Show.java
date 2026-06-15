@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -56,7 +55,4 @@ public class Show {
     @JoinColumn(name = "theater_id")
     @JsonIgnore
     private Theater theater;
-
-    @Column(name = "ticket_price")
-    private Double ticketPrice;
 }
