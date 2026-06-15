@@ -60,7 +60,6 @@ public class ShowServiceImpl implements ShowService {
         show.setStartsAt(start);
         show.setEndsAt(end);
         show.setTheater(theater);
-        show.setTicketPrice(showRequest.ticketPrice());
 
         Show savedShow = showRepository.save(show);
 
@@ -69,6 +68,13 @@ public class ShowServiceImpl implements ShowService {
             ss.setShow(savedShow);
             ss.setSeat(seat);
             ss.setBooked(false);
+
+            Double price = showRequest.categoryPrices().get(seat.getSeatCategory());
+            if (price == null) {
+                throw new IllegalArgumentException("Price not provided for required category: " + seat.getSeatCategory());
+            }
+            ss.setPrice(price);
+
             return ss;
         }).toList();
         showSeatRepository.saveAll(showSeats);
@@ -158,6 +164,8 @@ public class ShowServiceImpl implements ShowService {
                         .seatId(ss.getSeat().getSeatId())
                         .seatName(ss.getSeat().getName())
                         .isBooked(ss.isBooked())
+                        .seatCategory(ss.getSeat().getSeatCategory())
+                        .price(ss.getPrice())
                         .build())
                 .toList();
     }

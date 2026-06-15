@@ -5,6 +5,7 @@ import com.example.mdb.dto.ScreenResponse;
 import com.example.mdb.entity.Screen;
 import com.example.mdb.entity.Seat;
 import com.example.mdb.entity.Theater;
+import com.example.mdb.enums.SeatCategory;
 import com.example.mdb.exception.RowLimitExceededException;
 import com.example.mdb.exception.ScreenNotFoundException;
 import com.example.mdb.exception.TheaterNotFoundException;
@@ -39,7 +40,6 @@ public class ScreenServiceImpl implements ScreenService {
 
     @Override
     public ScreenResponse findScreen(String theaterId, String screenId) {
-        // Standard lookup: check if theater exists AND screen belongs to it (Optional way)
         return screenRepository.findById(screenId)
                 .filter(screen -> screen.getTheater().getTheaterId().equals(theaterId))
                 .map(screenMapper::screenResponseMapper)
@@ -57,24 +57,44 @@ public class ScreenServiceImpl implements ScreenService {
         screen.setTheater(theater);
 
         Screen savedScreen = screenRepository.save(screen);
-        savedScreen.setSeats(createSeats(savedScreen, screenRequest.capacity()));
+        savedScreen.setSeats(createSeats(savedScreen, screenRequest.capacity(), screenRequest.noOfRows()));
         return savedScreen;
     }
 
-    private List<Seat> createSeats(Screen screen, Integer capacity) {
+    private List<Seat> createSeats(Screen screen, Integer capacity, Integer totalRows) {
         List<Seat> seats = new LinkedList<>();
-        int seatsPerRow = screen.getCapacity() / screen.getNoOfRows();
+        int seatsPerRow = capacity / totalRows;
+
+        int normalRowLimit = totalRows / 3;
+        int premiumRowLimit = (totalRows * 2) / 3;
+
         char rowLabel = 'A';
+        int currentRowNum = 1;
+
         for (int i = 1, seatInRow = 1; i <= capacity; i++, seatInRow++) {
             Seat seat = new Seat();
             seat.setScreen(screen);
+
+            seat.setRowLabel(String.valueOf(rowLabel));
+            seat.setColIndex(seatInRow);
             seat.setName(rowLabel + "" + seatInRow);
             seat.setDeleted(false);
+            seat.setAisle(false);
+
+            if (currentRowNum <= normalRowLimit) {
+                seat.setSeatCategory(SeatCategory.NORMAL);
+            } else if (currentRowNum <= premiumRowLimit) {
+                seat.setSeatCategory(SeatCategory.PREMIUM);
+            } else {
+                seat.setSeatCategory(SeatCategory.VIP);
+            }
+
             seats.add(seatRepository.save(seat));
 
             if (seatInRow == seatsPerRow) {
                 seatInRow = 0;
                 rowLabel++;
+                currentRowNum++;
             }
         }
         return seats;

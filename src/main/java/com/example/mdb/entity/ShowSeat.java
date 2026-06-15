@@ -22,6 +22,9 @@ public class ShowSeat {
 
     private boolean isBooked = false;
 
+    @Column(name = "price")
+    private Double price;
+
     @Version
     private Integer version;
 }

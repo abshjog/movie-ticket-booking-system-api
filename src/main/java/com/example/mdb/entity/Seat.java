@@ -1,10 +1,10 @@
 package com.example.mdb.entity;
 
+import com.example.mdb.enums.SeatCategory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -23,6 +23,19 @@ public class Seat {
 
     @Column(name = "name")
     private String name;
+
+    @Column(name = "row_label")
+    private String rowLabel;
+
+    @Column(name = "col_index")
+    private Integer colIndex;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "seat_category")
+    private SeatCategory seatCategory;
+
+    @Column(name = "is_aisle")
+    private boolean isAisle = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screen_id")

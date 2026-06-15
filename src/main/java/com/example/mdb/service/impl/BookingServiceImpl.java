@@ -4,6 +4,7 @@ import com.example.mdb.dto.BookingRequest;
 import com.example.mdb.dto.BookingResponse;
 import com.example.mdb.entity.*;
 import com.example.mdb.enums.BookingStatus;
+import com.example.mdb.enums.SeatCategory;
 import com.example.mdb.exception.BookingNotAllowedException;
 import com.example.mdb.exception.SeatAlreadyBookedException;
 import com.example.mdb.exception.UserNotFoundException;
@@ -34,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,11 +89,9 @@ public class BookingServiceImpl implements BookingService {
         selectedShowSeats.forEach(ss -> ss.setBooked(true));
         showSeatRepository.saveAll(selectedShowSeats);
 
-        double ticketPrice = show.getTicketPrice();
-        int seatCount = selectedShowSeats.size();
-
-        BigDecimal baseAmount = BigDecimal.valueOf(ticketPrice)
-                .multiply(BigDecimal.valueOf(seatCount))
+        BigDecimal baseAmount = selectedShowSeats.stream()
+                .map(ss -> BigDecimal.valueOf(ss.getPrice() != null ? ss.getPrice() : 0.0))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal taxAmount = baseAmount.multiply(BigDecimal.valueOf(0.18))
@@ -271,6 +271,16 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
+    private String getSeatPrefix(SeatCategory category) {
+        if (category == null) return "";
+        return switch (category) {
+            case VIP -> "VIP - ";
+            case PREMIUM -> "PR - ";
+            case EXECUTIVE -> "EX - ";
+            case NORMAL -> "NR - ";
+        };
+    }
+
     @Override
     public byte[] generateTicketPdf(String bookingId, String email) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -297,7 +307,15 @@ public class BookingServiceImpl implements BookingService {
         context.setVariable("qrCode", qrCodeGenerator.generateQRCodeBase64(booking.getReferenceCode()));
         context.setVariable("screenName", booking.getShow().getScreen().getName());
         context.setVariable("screenType", dynamicScreenType);
-        context.setVariable("seats", booking.getSeats().stream().map(Seat::getName).collect(Collectors.joining(", ")));
+
+        context.setVariable("seats", booking.getSeats().stream()
+                .collect(Collectors.groupingBy(Seat::getSeatCategory, TreeMap::new, Collectors.toList()))
+                .entrySet().stream()
+                .map(entry -> getSeatPrefix(entry.getKey()) + entry.getValue().stream()
+                        .map(Seat::getName)
+                        .collect(Collectors.joining(", ")))
+                .collect(Collectors.joining(" | ")));
+
         context.setVariable("theaterName", booking.getShow().getScreen().getTheater().getName());
         context.setVariable("theaterAddress", booking.getShow().getScreen().getTheater().getAddress());
         context.setVariable("theaterCity", booking.getShow().getScreen().getTheater().getCity());
