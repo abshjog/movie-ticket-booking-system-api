@@ -56,7 +56,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(errorResponse);
     }
 
-
     @ExceptionHandler(SeatAlreadyBookedException.class)
     public ResponseEntity<ErrorStructure<String>> handleSeatAlreadyBooked(SeatAlreadyBookedException ex) {
         return restResponseBuilder.error(

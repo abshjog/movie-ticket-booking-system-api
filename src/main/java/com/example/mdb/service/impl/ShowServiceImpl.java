@@ -166,6 +166,7 @@ public class ShowServiceImpl implements ShowService {
                         .isBooked(ss.isBooked())
                         .seatCategory(ss.getSeat().getSeatCategory())
                         .price(ss.getPrice())
+                        .colIndex(ss.getSeat().getColIndex())
                         .build())
                 .toList();
     }
