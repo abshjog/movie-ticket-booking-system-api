@@ -1,12 +1,11 @@
 package com.example.mdb.service.impl;
 
+import com.example.mdb.dto.RowLayoutRequest;
 import com.example.mdb.dto.ScreenRequest;
 import com.example.mdb.dto.ScreenResponse;
 import com.example.mdb.entity.Screen;
 import com.example.mdb.entity.Seat;
 import com.example.mdb.entity.Theater;
-import com.example.mdb.enums.SeatCategory;
-import com.example.mdb.exception.RowLimitExceededException;
 import com.example.mdb.exception.ScreenNotFoundException;
 import com.example.mdb.exception.TheaterNotFoundException;
 import com.example.mdb.mapper.ScreenMapper;
@@ -47,54 +46,50 @@ public class ScreenServiceImpl implements ScreenService {
     }
 
     private Screen copy(ScreenRequest screenRequest, Screen screen, Theater theater) {
-        if (screenRequest.noOfRows() > screenRequest.capacity()) {
-            throw new RowLimitExceededException("Rows cannot be more than total capacity!");
-        }
         screen.setName(screenRequest.screenName());
         screen.setScreenType(screenRequest.screenType());
-        screen.setCapacity(screenRequest.capacity());
-        screen.setNoOfRows(screenRequest.noOfRows());
         screen.setTheater(theater);
 
+        // Save initially to generate the Screen ID needed for Seat relationships
         Screen savedScreen = screenRepository.save(screen);
-        savedScreen.setSeats(createSeats(savedScreen, screenRequest.capacity(), screenRequest.noOfRows()));
-        return savedScreen;
+
+        // Generate seats based on the Matrix layout
+        List<Seat> generatedSeats = createSeats(savedScreen, screenRequest.seatLayout());
+        savedScreen.setSeats(generatedSeats);
+
+        // Automatically calculate and update capacity and rows so DB stays consistent
+        savedScreen.setCapacity(generatedSeats.size());
+        savedScreen.setNoOfRows(screenRequest.seatLayout().size());
+
+        // Save the updated capacity and rows
+        return screenRepository.save(savedScreen);
     }
 
-    private List<Seat> createSeats(Screen screen, Integer capacity, Integer totalRows) {
+    private List<Seat> createSeats(Screen screen, List<RowLayoutRequest> seatLayout) {
         List<Seat> seats = new LinkedList<>();
-        int seatsPerRow = capacity / totalRows;
 
-        int normalRowLimit = totalRows / 3;
-        int premiumRowLimit = (totalRows * 2) / 3;
+        for (RowLayoutRequest rowLayout : seatLayout) {
+            String rowLabel = rowLayout.rowLabel().toUpperCase();
+            int colIndex = 1;
 
-        char rowLabel = 'A';
-        int currentRowNum = 1;
+            for (String seatVal : rowLayout.seats()) {
+                // If it's an AISLE, skip saving to DB, but increment the column index for physical spacing
+                if (seatVal == null || seatVal.equalsIgnoreCase("AISLE") || seatVal.equalsIgnoreCase("NONE")) {
+                    colIndex++;
+                    continue;
+                }
 
-        for (int i = 1, seatInRow = 1; i <= capacity; i++, seatInRow++) {
-            Seat seat = new Seat();
-            seat.setScreen(screen);
+                Seat seat = new Seat();
+                seat.setScreen(screen);
+                seat.setRowLabel(rowLabel);
+                seat.setColIndex(colIndex);
+                seat.setName(rowLabel + seatVal);
+                seat.setSeatCategory(rowLayout.category());
+                seat.setDeleted(false);
+                seat.setAisle(false);
 
-            seat.setRowLabel(String.valueOf(rowLabel));
-            seat.setColIndex(seatInRow);
-            seat.setName(rowLabel + "" + seatInRow);
-            seat.setDeleted(false);
-            seat.setAisle(false);
-
-            if (currentRowNum <= normalRowLimit) {
-                seat.setSeatCategory(SeatCategory.NORMAL);
-            } else if (currentRowNum <= premiumRowLimit) {
-                seat.setSeatCategory(SeatCategory.PREMIUM);
-            } else {
-                seat.setSeatCategory(SeatCategory.VIP);
-            }
-
-            seats.add(seatRepository.save(seat));
-
-            if (seatInRow == seatsPerRow) {
-                seatInRow = 0;
-                rowLabel++;
-                currentRowNum++;
+                seats.add(seatRepository.save(seat));
+                colIndex++;
             }
         }
         return seats;

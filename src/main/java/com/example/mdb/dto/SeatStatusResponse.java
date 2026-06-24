@@ -9,5 +9,6 @@ public record SeatStatusResponse(
         String seatName,
         boolean isBooked,
         SeatCategory seatCategory,
-        Double price
+        Double price,
+        Integer colIndex
 ) {}
