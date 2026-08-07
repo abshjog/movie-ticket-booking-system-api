@@ -25,11 +25,6 @@ public record UserRegistrationRequest(
         @Email(message = "Email should be valid")
         String email,
 
-        @NotBlank(message = "Password must not be blank")
-        @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$",
-                message = "Password must be between 8-20 characters and include at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"
-        )
         String password,
 
         @NotBlank(message = "Phone number must not be blank")

@@ -88,7 +88,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return restResponseBuilder.error(HttpStatus.UNAUTHORIZED, ex.getMessage(), "No Username Found");
     }
 
-
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorStructure<String>> handleUserNotFound(UserNotFoundException ex) {
         return restResponseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "User or Owner not found in the Database.");
@@ -113,7 +112,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorStructure<String>> handleCityNotFound(CityNotFoundException ex) {
         return restResponseBuilder.error(HttpStatus.NOT_FOUND, ex.getMessage(), "Entered city not found.");
     }
-
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorStructure<String>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
@@ -142,6 +140,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidShowTimeException.class)
     public ResponseEntity<ErrorStructure<String>> handleInvalidShowTime(InvalidShowTimeException ex) {
         return restResponseBuilder.error(HttpStatus.BAD_REQUEST, ex.getMessage(), "Show creation failed: Past dates are not allowed.");
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ErrorStructure<String>> handleInvalidOtpException(InvalidOtpException ex) {
+        return restResponseBuilder.error(HttpStatus.BAD_REQUEST, ex.getMessage(), "OTP Verification Failed.");
     }
 
     @ExceptionHandler(RuntimeException.class)

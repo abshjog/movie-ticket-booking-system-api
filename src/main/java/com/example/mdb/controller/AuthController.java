@@ -1,6 +1,8 @@
 package com.example.mdb.controller;
 
 import com.example.mdb.dto.LoginRequest;
+import com.example.mdb.dto.OtpSendRequest;
+import com.example.mdb.dto.OtpVerifyRequest;
 import com.example.mdb.dto.UserRegistrationRequest;
 import com.example.mdb.dto.UserResponse;
 import com.example.mdb.dto.auth.AuthResponse;
@@ -15,7 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin; // NAYA IMPORT
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,5 +51,17 @@ public class AuthController {
         AuthenticatedTokenDetails tokenDetails = (AuthenticatedTokenDetails) request.getAttribute("tokenDetails");
         AuthResponse authResponse = authService.refresh(tokenDetails);
         return responseBuilder.success(HttpStatus.OK, "Token Refreshed", authResponse);
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ResponseStructure<String>> sendOtp(@RequestBody @Valid OtpSendRequest request) {
+        String message = authService.sendOtp(request);
+        return responseBuilder.success(HttpStatus.OK, message, null);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ResponseStructure<AuthResponse>> verifyOtp(@RequestBody @Valid OtpVerifyRequest request) {
+        AuthResponse authResponse = authService.verifyOtpAndLogin(request);
+        return responseBuilder.success(HttpStatus.OK, "OTP Verified successfully. Logged in.", authResponse);
     }
 }
