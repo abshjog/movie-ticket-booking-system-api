@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Service
@@ -39,10 +40,24 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(user.email()))
             throw new EmailAlreadyExistsException("User with the entered Email already exists");
 
+        // Role-based password processing
+        String finalPassword;
+        if (user.userRole() == com.example.mdb.enums.UserRole.THEATER_OWNER) {
+            if (user.password() == null || user.password().isBlank()) {
+                throw new IllegalArgumentException("Registration Failed: Password is mandatory for Theater Owners.");
+            }
+            finalPassword = user.password();
+        } else {
+            // Normal User gets a system-generated random password (Passwordless flow)
+            finalPassword = UUID.randomUUID().toString();
+        }
+
+        // Passing the resolved finalPassword to the copy method to avoid NullPointerExceptions
         UserDetails userDetails = switch (user.userRole()) {
-            case USER -> copy(new User(), user);
-            case THEATER_OWNER -> copy(new TheaterOwner(), user);
+            case USER -> copy(new User(), user, finalPassword);
+            case THEATER_OWNER -> copy(new TheaterOwner(), user, finalPassword);
         };
+
         return userMapper.userResponseMapper(userDetails);
     }
 
@@ -126,10 +141,11 @@ public class UserServiceImpl implements UserService {
         return usersPage.map(userMapper::userResponseMapper);
     }
 
-    private UserDetails copy(UserDetails userEntity, UserRegistrationRequest request) {
+    // Now takes finalPassword as a parameter so we safely encode the correct password
+    private UserDetails copy(UserDetails userEntity, UserRegistrationRequest request, String finalPassword) {
         userEntity.setFullName(request.fullName());
         userEntity.setUserRole(request.userRole());
-        userEntity.setPassword(passwordEncoder.encode(request.password()));
+        userEntity.setPassword(passwordEncoder.encode(finalPassword));
         userEntity.setEmail(request.email());
         userEntity.setDateOfBirth(request.dateOfBirth());
         userEntity.setPhoneNumber(request.phoneNumber());

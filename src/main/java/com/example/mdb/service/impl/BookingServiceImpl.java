@@ -35,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -308,13 +309,19 @@ public class BookingServiceImpl implements BookingService {
         context.setVariable("screenName", booking.getShow().getScreen().getName());
         context.setVariable("screenType", dynamicScreenType);
 
-        context.setVariable("seats", booking.getSeats().stream()
-                .collect(Collectors.groupingBy(Seat::getSeatCategory, TreeMap::new, Collectors.toList()))
-                .entrySet().stream()
-                .map(entry -> getSeatPrefix(entry.getKey()) + entry.getValue().stream()
-                        .map(Seat::getName)
-                        .collect(Collectors.joining(", ")))
-                .collect(Collectors.joining(" | ")));
+        Map<String, String> seatGroups = booking.getSeats().stream()
+                .collect(Collectors.groupingBy(
+                        seat -> seat.getSeatCategory().name(),
+                        TreeMap::new,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                seatsList -> getSeatPrefix(seatsList.get(0).getSeatCategory()) + seatsList.stream()
+                                        .map(Seat::getName)
+                                        .collect(Collectors.joining(", "))
+                        )
+                ));
+
+        context.setVariable("seatGroups", seatGroups);
 
         context.setVariable("theaterName", booking.getShow().getScreen().getTheater().getName());
         context.setVariable("theaterAddress", booking.getShow().getScreen().getTheater().getAddress());

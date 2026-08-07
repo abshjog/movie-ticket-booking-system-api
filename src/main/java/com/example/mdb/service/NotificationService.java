@@ -5,4 +5,6 @@ import com.example.mdb.entity.Booking;
 public interface NotificationService {
 
     void sendBookingConfirmation(Booking booking);
+
+    void sendOtpEmail(String toEmail, String otpCode);
 }

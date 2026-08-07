@@ -25,7 +25,14 @@
         .venue-info { padding: 20px 20px 10px 20px; text-align: center; background-color: #151515; }
 
         .screen-type { font-size: 12px; color: #fff; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
-        .seat-tag { color: white; font-weight: bold; margin-bottom: 12px; display: inline-block; font-size: 16px; letter-spacing: 1px; }
+
+        .seat-tag { font-weight: bold; margin-bottom: 12px; display: inline-block; font-size: 16px; letter-spacing: 1px; }
+        .seat-vip { color: #f59e0b; }
+        .seat-premium { color: #6366f1; }
+        .seat-executive { color: #10b981; }
+        .seat-normal { color: #94a3b8; }
+        .seat-separator { color: #ffffff; margin: 0 4px; }
+
         .theater-name { font-size: 13px; color: #bbb; font-weight: bold; margin-bottom: 5px; }
 
         .footer-id { font-size: 12px; color: #ddd; padding: 12px 0; text-align: center; background-color: #111; letter-spacing: 1.5px; font-family: monospace; margin-top: 15px; border-radius: 8px; border: 1px dashed #333; }
@@ -56,7 +63,13 @@
     <div class="venue-info">
         <div class="screen-type" th:text="${screenName} + ' | ' + ${screenType}">Screen Details</div>
 
-        <div class="seat-tag" th:text="${seats}">Seats</div>
+        <div class="seat-tag">
+            <th:block th:each="entry, iterStat : ${seatGroups}">
+                <span th:class="'seat-' + ${#strings.toLowerCase(entry.key)}" th:text="${entry.value}"></span>
+                <span th:if="${!iterStat.last}" class="seat-separator">|</span>
+            </th:block>
+        </div>
+
         <div class="theater-name" th:text="${theaterName} + ', ' + ${theaterAddress} + ', ' + ${theaterCity}">Cinema Venue</div>
 
         <div class="footer-id" th:text="'Booking ID: ' + ${bookingId}">Booking ID</div>

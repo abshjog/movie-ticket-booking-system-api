@@ -26,6 +26,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -68,15 +69,20 @@ public class NotificationServiceImpl implements NotificationService {
 
             String invoiceOrdinalDate = getOrdinalDate(LocalDate.now(indiaZone));
 
-            String seats = (booking.getSeats() != null && !booking.getSeats().isEmpty())
+            // Dynamic seat map grouping
+            Map<String, String> seatGroups = (booking.getSeats() != null && !booking.getSeats().isEmpty())
                     ? booking.getSeats().stream()
-                    .collect(Collectors.groupingBy(Seat::getSeatCategory, TreeMap::new, Collectors.toList()))
-                    .entrySet().stream()
-                    .map(entry -> getSeatPrefix(entry.getKey()) + entry.getValue().stream()
-                            .map(Seat::getName)
-                            .collect(Collectors.joining(", ")))
-                    .collect(Collectors.joining(" | "))
-                    : "Unassigned";
+                    .collect(Collectors.groupingBy(
+                            seat -> seat.getSeatCategory().name(),
+                            TreeMap::new,
+                            Collectors.collectingAndThen(
+                                    Collectors.toList(),
+                                    seatsList -> getSeatPrefix(seatsList.get(0).getSeatCategory()) + seatsList.stream()
+                                            .map(Seat::getName)
+                                            .collect(Collectors.joining(", "))
+                            )
+                    ))
+                    : new TreeMap<>();
 
             byte[] qrCodeBytes = qrCodeGenerator.generateQRCodeImage(booking.getReferenceCode());
             String qrBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
@@ -110,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
             ticketCtx.setVariable("screenName", booking.getShow().getScreen().getName());
             ticketCtx.setVariable("screenType", displayScreenType);
             ticketCtx.setVariable("showDateTime", ticketDate);
-            ticketCtx.setVariable("seats", seats);
+            ticketCtx.setVariable("seatGroups", seatGroups); // Using Clean Map
             ticketCtx.setVariable("qrCode", qrBase64);
             ticketCtx.setVariable("bookingId", booking.getReferenceCode());
             byte[] ticketPdfBytes = generatePdfFromHtml("m-ticket", ticketCtx);
@@ -152,7 +158,7 @@ public class NotificationServiceImpl implements NotificationService {
             emailCtx.setVariable("showTime", emailTime);
             emailCtx.setVariable("theaterName", booking.getShow().getTheater().getName() + ", " + booking.getShow().getTheater().getCity());
             emailCtx.setVariable("screenName", booking.getShow().getScreen().getName());
-            emailCtx.setVariable("seats", seats); // Grouped string is injected here natively
+            emailCtx.setVariable("seatGroups", seatGroups); // Using Clean Map
             emailCtx.setVariable("ticketTotal", String.format("₹%.2f", ticketBaseAmount));
             emailCtx.setVariable("taxes", String.format("₹%.2f", taxAmount));
             emailCtx.setVariable("totalAmount", String.format("₹%.2f", grandTotal));
@@ -227,5 +233,33 @@ public class NotificationServiceImpl implements NotificationService {
         renderer.layout();
         renderer.createPDF(outputStream);
         return outputStream.toByteArray();
+    }
+
+    @Async
+    @Override
+    public void sendOtpEmail(String toEmail, String otpCode) {
+        log.info("Sending OTP to email: {}", toEmail);
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("🍿 CINEPASS - Your Login OTP");
+
+            Context context = new Context();
+            context.setVariable("companyName", companyName);
+            context.setVariable("otpCode", otpCode);
+
+            String htmlContent = templateEngine.process("otp-template", context);
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+
+            log.info("OTP Email dispatched successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send OTP email to {}. Error: {}", toEmail, e.getMessage());
+            throw new RuntimeException("Failed to send OTP Email");
+        }
     }
 }
